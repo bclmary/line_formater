@@ -137,7 +137,8 @@ def multi_align(elts, length, **kwargs):
     """
     N = len(elts)
     sep = kwargs.get("sep", " ")
-    actual_length = length - len(sep) * (N-1)
+    tip = kwargs.get("tip", "")
+    actual_length = length - len(sep) * (N-1) -len(tip)*2
     default_lengths = actual_length // N
     default_remains = default_lengths + actual_length % N
     lengths = kwargs.get("lengths", [default_lengths]*(N-1) + [default_remains])
@@ -204,6 +205,43 @@ def right_left(elt1, elt2, length, **kwargs):
     """
     return multi_align([elt1, elt2], length, justs=["r","l"], **kwargs)
 
+def table(elts, length, justs="l", **kwargs):
+    """
+    >>> table(["elt1", "elt2", "elt3"], 34, justs=["l", "c", "r"])
+    '| elt1     |   elt2   |     elt3 |'
+    >>> table(["elt1", "elt2", "elt3"], 34)
+    '| elt1     | elt2     | elt3     |'
+    >>> table(["elt1", "elt2", "elt3"], 34, justs="c")
+    '|   elt1   |   elt2   |   elt3   |'
+    >>> table(["elt1", "elt2", "elt3"], 34, justs="r")
+    '|     elt1 |     elt2 |     elt3 |'
+    """
+    sep = "|"
+    return multi_align(elts, length, justs=justs, sep=sep, tip=sep, pads=1, **kwargs)
+
+def table_center(elts, length, **kwargs):
+    """
+    >>> table_center(["elt1", "elt2", "elt3"], 34)
+    '|   elt1   |   elt2   |   elt3   |'
+    """
+    sep = "|"
+    return multi_align(elts, length, justs="c", sep=sep, tip=sep, pads=1, **kwargs)
+
+def table_left(elts, length, **kwargs):
+    """
+    >>> table_left(["elt1", "elt2", "elt3"], 34)
+    '| elt1     | elt2     | elt3     |'
+    """
+    sep = "|"
+    return multi_align(elts, length, justs="l", sep=sep, tip=sep, pads=1, **kwargs)
+
+def table_right(elts, length, **kwargs):
+    """
+    >>> table_right(["elt1", "elt2", "elt3"], 34)
+    '|     elt1 |     elt2 |     elt3 |'
+    """
+    sep = "|"
+    return multi_align(elts, length, justs="r", sep=sep, tip=sep, pads=1, **kwargs)
 
 
 def multi_right_left(elts1, elts2, length, **kwargs):
