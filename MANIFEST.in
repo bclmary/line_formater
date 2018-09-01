@@ -1,0 +1,4 @@
+include *.md *.txt *.cfg
+global-exclude *.py[co]
+
+
