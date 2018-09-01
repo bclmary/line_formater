@@ -24,16 +24,16 @@ def align(elts, length, **kwargs):
     >>> align(["elt1", "elt2", "elt3"], 20, just="c", tip="|", sep=":", pad=1)
     ' | elt1:elt2:elt3 | '
     """
-    elts = [elts] if not isinstance(elts, (tuple, list)) else elts
+    just =  kwargs.setdefault("just",  "l")
+    pad =   kwargs.setdefault("pad",   0)
+    l_pad = kwargs.setdefault("l_pad", pad)
+    r_pad = kwargs.setdefault("r_pad", pad)
+    shift = kwargs.setdefault("shift", 0)
+    sep =   kwargs.setdefault("sep",   " ")
+    tip =   kwargs.setdefault("tip",   "")
+    crop =  kwargs.setdefault("crop",  True)
+    elts = elts if isinstance(elts, (tuple, list)) else [elts]
     elts = [str(elt) for elt in elts]
-    just = kwargs.get("just", "l")
-    pad = kwargs.get("pad", 0)
-    l_pad = kwargs.get("l_pad", pad)
-    r_pad = kwargs.get("r_pad", pad)
-    shift = kwargs.get("shift", 0)
-    sep = kwargs.get("sep", " ")
-    tip = kwargs.get("tip", "")
-    crop = kwargs.get("crop", True)
     length = length - l_pad - r_pad - len(tip)*2
     space, retained = 1, False
     if just == "s":
@@ -48,8 +48,8 @@ def align(elts, length, **kwargs):
     if shift > 0:
         txt = " "*shift + txt[:-shift]
     if shift < 0:
-        txt = txt[-shift:] + " "*-shift # txt[:-shift]
-    if len(txt) > length and crop:
+        txt = txt[-shift:] + " "*-shift
+    if crop and len(txt) > length:
         n = len(txt) - length
         if just == "l":
             txt = txt[:length]
@@ -79,7 +79,8 @@ def center(elts, length, **kwargs):
     >>> center(["elt1", "elt2"], 20, sep=" "*4)
     '    elt1    elt2    '
     """
-    return align(elts, length, just="c", **kwargs)
+    kwargs.setdefault("just", "c")
+    return align(elts, length, **kwargs)
 
 
 def left(elts, length, **kwargs):
@@ -87,7 +88,8 @@ def left(elts, length, **kwargs):
     >>> left("content", 20, l_pad=2)
     '  content           '
     """
-    return align(elts, length, just="l", **kwargs)
+    kwargs.setdefault("just", "l")
+    return align(elts, length, **kwargs)
 
 
 def right(elts, length, **kwargs):
@@ -95,7 +97,8 @@ def right(elts, length, **kwargs):
     >>> right("content", 20, r_pad=2)
     '           content  '
     """
-    return align(elts, length, just="r", **kwargs)
+    kwargs.setdefault("just", "r")
+    return align(elts, length, **kwargs)
 
 
 def spread(elts, length, **kwargs):
@@ -107,7 +110,8 @@ def spread(elts, length, **kwargs):
     >>> spread(["long_content", "very_long_content"], 20)
     'content very_long_co'
     """
-    return align(elts, length, just="s", **kwargs)
+    kwargs.setdefault("just", "s")
+    return align(elts, length, **kwargs)
 
 
 def _repeat_if_single(var, N, default):
@@ -169,21 +173,24 @@ def multi_center(elts, length, **kwargs):
     >>> multi_center(["elt1", "elt2", "elt3"], 30)
     '   elt1      elt2      elt3   '
     """
-    return multi_align(elts, length, justs="c", **kwargs)
+    kwargs.setdefault("justs", "c")
+    return multi_align(elts, length, **kwargs)
 
 def multi_right(elts, length, **kwargs):
     """
     >>> multi_right(["elt1", "elt2", "elt3"], 30)
     '     elt1      elt2       elt3'
     """
-    return multi_align(elts, length, justs="r", **kwargs)
+    kwargs.setdefault("justs", "r")
+    return multi_align(elts, length, **kwargs)
 
 def multi_left(elts, length, **kwargs):
     """
     >>> multi_left(["elt1", "elt2", "elt3"], 30)
     'elt1      elt2      elt3      '
     """
-    return multi_align(elts, length, justs="l", **kwargs)
+    kwargs.setdefault("justs", "l")
+    return multi_align(elts, length, **kwargs)
 
 
 #def multi_spread(elts, length, **kwargs):
@@ -205,7 +212,7 @@ def right_left(elt1, elt2, length, **kwargs):
     """
     return multi_align([elt1, elt2], length, justs=["r","l"], **kwargs)
 
-def table(elts, length, justs="l", **kwargs):
+def table(elts, length, **kwargs):
     """
     >>> table(["elt1", "elt2", "elt3"], 34, justs=["l", "c", "r"])
     '| elt1     |   elt2   |     elt3 |'
@@ -216,32 +223,35 @@ def table(elts, length, justs="l", **kwargs):
     >>> table(["elt1", "elt2", "elt3"], 34, justs="r")
     '|     elt1 |     elt2 |     elt3 |'
     """
-    sep = "|"
-    return multi_align(elts, length, justs=justs, sep=sep, tip=sep, pads=1, **kwargs)
+    kwargs.setdefault("sep", "|")
+    kwargs.setdefault("tip", "|")
+    kwargs.setdefault("justs", "l")
+    kwargs.setdefault("pads", 1)
+    return multi_align(elts, length, **kwargs)
 
 def table_center(elts, length, **kwargs):
     """
     >>> table_center(["elt1", "elt2", "elt3"], 34)
     '|   elt1   |   elt2   |   elt3   |'
     """
-    sep = "|"
-    return multi_align(elts, length, justs="c", sep=sep, tip=sep, pads=1, **kwargs)
+    kwargs.setdefault("justs", "c")
+    return table(elts, length, **kwargs)
 
 def table_left(elts, length, **kwargs):
     """
     >>> table_left(["elt1", "elt2", "elt3"], 34)
     '| elt1     | elt2     | elt3     |'
     """
-    sep = "|"
-    return multi_align(elts, length, justs="l", sep=sep, tip=sep, pads=1, **kwargs)
+    kwargs.setdefault("justs", "l")
+    return table(elts, length, **kwargs)
 
 def table_right(elts, length, **kwargs):
     """
     >>> table_right(["elt1", "elt2", "elt3"], 34)
     '|     elt1 |     elt2 |     elt3 |'
     """
-    sep = "|"
-    return multi_align(elts, length, justs="r", sep=sep, tip=sep, pads=1, **kwargs)
+    kwargs.setdefault("justs", "r")
+    return table(elts, length, **kwargs)
 
 
 def multi_right_left(elts1, elts2, length, **kwargs):
