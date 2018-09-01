@@ -114,12 +114,14 @@ def spread(elts, length, **kwargs):
     return align(elts, length, **kwargs)
 
 
-def _repeat_if_single(var, N, default):
+def _setdefault_as_list(kwargs, varname, default, N):
+    var = kwargs.setdefault(varname, [default]*N)
     if not isinstance(var, (tuple, list)):
         var = [var]*N
-    elif len(var) < N:
-        var = var + [default] * (N - len(var))
-    else:
+    n_var = len(var) 
+    if n_var < N:
+        var = var + [default] * (N - n_var)
+    elif n_var > N:
         var = var[:N]
     return [default if v is None else v for v in var]
 
@@ -146,11 +148,11 @@ def multi_align(elts, length, **kwargs):
     default_lengths = actual_length // N
     default_remains = default_lengths + actual_length % N
     lengths = kwargs.get("lengths", [default_lengths]*(N-1) + [default_remains])
-    justs = _repeat_if_single(kwargs.get("justs", "l"), N, "l")
-    pads =  _repeat_if_single(kwargs.get("pads", 0), N, 0)
-    l_pads = _repeat_if_single(kwargs.get("l_pads", pads), N, pads[0])
-    r_pads = _repeat_if_single(kwargs.get("r_pads", pads), N, pads[0])
-    shifts = _repeat_if_single(kwargs.get("shifts", 0), N, 0)
+    justs =  _setdefault_as_list(kwargs, "justs",  "l",     N)
+    pads =   _setdefault_as_list(kwargs, "pads",   0,       N)
+    l_pads = _setdefault_as_list(kwargs, "l_pads", pads[0], N)
+    r_pads = _setdefault_as_list(kwargs, "r_pads", pads[0], N)
+    shifts = _setdefault_as_list(kwargs, "shifts", 0,       N)
     txt_elts = []
     for i, just in enumerate(justs):
         i_args = (
@@ -193,12 +195,13 @@ def multi_left(elts, length, **kwargs):
     return multi_align(elts, length, **kwargs)
 
 
-#def multi_spread(elts, length, **kwargs):
-#    """
-#    >>> multi_left([["A1", "A2", "A3"],["B1", "B2"]], 30)
-#    'A1    A2    A3 B1           B2'
-#    """
-#    return multi_align(elts, length, justs="s", **kwargs)
+def multi_spread(elts, length, **kwargs):
+    """
+    >>> multi_left([["A1", "A2", "A3"],["B1", "B2"]], 30)
+    'A1    A2    A3 B1           B2'
+    """
+    kwargs.setdefault("justs", "s")
+    return multi_align(elts, length, **kwargs)
 
 
 def right_left(elt1, elt2, length, **kwargs):
@@ -264,7 +267,7 @@ def multi_right_left(elts1, elts2, length, **kwargs):
     '    var1: 1       var2: 2   '
     """
     N = min(len(elts1), len(elts2))
-    seps = _repeat_if_single(kwargs.get("seps", " "), N, " ")
+    seps = _setdefault_as_list(kwargs, "seps", " ", N)
     elts = []
     i_kwargs = kwargs.copy()
     i_kwargs.pop("sep", None)
