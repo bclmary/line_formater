@@ -142,25 +142,26 @@ def multi_align(elts, length, **kwargs):
     '    elt1 | elt2     '
     """
     N = len(elts)
-    sep = kwargs.get("sep", " ")
-    tip = kwargs.get("tip", "")
-    actual_length = length - len(sep) * (N-1) -len(tip)*2
-    default_lengths = actual_length // N
-    default_remains = default_lengths + actual_length % N
-    lengths = kwargs.get("lengths", [default_lengths]*(N-1) + [default_remains])
+    sep = kwargs.setdefault("sep", " ")
+    tip = kwargs.setdefault("tip", "")
     justs =  _setdefault_as_list(kwargs, "justs",  "l",     N)
     pads =   _setdefault_as_list(kwargs, "pads",   0,       N)
     l_pads = _setdefault_as_list(kwargs, "l_pads", pads[0], N)
     r_pads = _setdefault_as_list(kwargs, "r_pads", pads[0], N)
     shifts = _setdefault_as_list(kwargs, "shifts", 0,       N)
+    actual_length = length - len(sep) * (N-1) -len(tip)*2
+    default_length = actual_length // N
+    default_remain = default_length + actual_length % N
+    default_lengths = [default_length]*(N-1) + [default_remain]
+    lengths = kwargs.setdefault("lengths", default_lengths)
     txt_elts = []
-    for i, just in enumerate(justs):
+    for i, elt in enumerate(elts):
         i_args = (
-            elts[i], 
+            elt,
             lengths[i],
             )
         i_kwargs = {
-            "just": justs[i], 
+            "just": justs[i],
             "pad":   pads[i],
             "l_pad": l_pads[i],
             "r_pad": r_pads[i],
@@ -197,7 +198,7 @@ def multi_left(elts, length, **kwargs):
 
 def multi_spread(elts, length, **kwargs):
     """
-    >>> multi_left([["A1", "A2", "A3"],["B1", "B2"]], 30)
+    >>> multi_spread([["A1", "A2", "A3"],["B1", "B2"]], 30)
     'A1    A2    A3 B1           B2'
     """
     kwargs.setdefault("justs", "s")
@@ -256,6 +257,14 @@ def table_right(elts, length, **kwargs):
     kwargs.setdefault("justs", "r")
     return table(elts, length, **kwargs)
 
+def table_spread(elts, length, **kwargs):
+    """
+    >>> table_spread([["A1", "A2", "A3"],["B1", "B2"]], 30)
+    '| A1  A2   A3 | B1        B2 |'
+    """
+    kwargs.setdefault("justs", "s")
+    return table(elts, length, **kwargs)
+
 
 def multi_right_left(elts1, elts2, length, **kwargs):
     """
@@ -277,6 +286,8 @@ def multi_right_left(elts1, elts2, length, **kwargs):
         tmp = right_left(elt1, elt2, length, sep=seps[i], **i_kwargs)
         elts.append(tmp)
     return multi_center(elts, length, **kwargs)
+
+
 
 
 if __name__ == "__main__":
