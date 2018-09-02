@@ -18,8 +18,8 @@ class LineFormater(object):
     lengths = None
     justs = "l"
     pads = 0
-    l_pads = 0
-    r_pads = 0
+    l_pads = None
+    r_pads = None
     shifts = 0
     seps = " "
     tips = ""
@@ -32,6 +32,9 @@ class LineFormater(object):
         }
 
     def __init__(self, **kwargs):
+        self.set(**kwargs)
+
+    def set(self, **kwargs):
         # Single form of key word arguments
         self.length = kwargs.get("length", self.length)
         self.just =  kwargs.get("just",  self.just)
@@ -46,13 +49,11 @@ class LineFormater(object):
         self.lengths = kwargs.get("lengths", self.lengths)
         self.justs =  kwargs.get("justs",  self.justs)
         self.pads =   kwargs.get("pads", self.pads)
-        self.l_pads = kwargs.get("l_pads", self.pads)
-        self.r_pads = kwargs.get("r_pads", self.pads)
+        self.l_pads = kwargs.get("l_pads", self.l_pads)
+        self.r_pads = kwargs.get("r_pads", self.r_pads)
         self.shifts = kwargs.get("shifts", self.shifts)
         self.seps =   kwargs.get("seps",   self.seps)
         self.tips =   kwargs.get("tips",   self.tips)
-
-
 
     def align(self, elts, **kwargs):
         """
@@ -170,8 +171,12 @@ class LineFormater(object):
         return self.align(elts, **kwargs)
 
 
-    def _setdefault_as_list(self, kwargs, varname, default):
-        N = len(default)
+    def _setdefault_as_list(self, kwargs, varname, default, N):
+        if not isinstance(default, (tuple, list)):
+            default = [default]*N
+        if len(default) < N:
+            message = "default for {} has not same dimensions as given elements"
+            raise ValueError(message.format(varname))
         var = kwargs.setdefault(varname, default)
         if not isinstance(var, (tuple, list)):
             var = [var]*N
@@ -198,8 +203,11 @@ class LineFormater(object):
         '    right   center  left      '
         >>> LF.multi_align(["long_elt", "very_long_elt", "short"], r_pads=3)
         'long_e    very_l    short     '
-        >>> LF.multi_align(["elt1", "elt2"], sep="|", pads=1, justs=["r", "l"])
+        >>> LF.set(pads=1, sep="|")
+        >>> LF.multi_align(["elt1", "elt2"], justs=["r", "l"])
         '         elt1 | elt2          '
+        >>> LF.multi_align(["elt1", "elt2"], justs="c", tip="|")
+        '|     elt1    |     elt2     |'
         """
         N = len(elts)
         sep = kwargs.setdefault("sep", self.sep)
@@ -209,13 +217,16 @@ class LineFormater(object):
         default_length = actual_length // N
         default_remain = default_length + actual_length % N
         default_lengths = [default_length]*(N-1) + [default_remain]
-        lengths = kwargs.setdefault("lengths", default_lengths)
-        self._setdefault_as_list(kwargs, "justs", ["l"]*N)
-        pads = self._setdefault_as_list(kwargs, "pads", [0]*N)
-        self._setdefault_as_list(kwargs, "l_pads", pads)
-        self._setdefault_as_list(kwargs, "r_pads", pads)
-        self._setdefault_as_list(kwargs, "shifts", [0]*N)
-        self._setdefault_as_list(kwargs, "seps", [" "]*N)
+        self._setdefault_as_list(kwargs, "lengths", default_lengths, N)
+        self._setdefault_as_list(kwargs, "justs", self.justs, N)
+        pads = self._setdefault_as_list(kwargs, "pads", self.pads, N)
+        l_pads = self._setdefault_as_list(kwargs, "l_pads", self.l_pads, N)
+        r_pads = self._setdefault_as_list(kwargs, "r_pads", self.r_pads, N)
+        None_N = [None] * N
+        kwargs["l_pads"] = pads if l_pads == None_N else l_pads
+        kwargs["r_pads"] = pads if r_pads == None_N else r_pads
+        self._setdefault_as_list(kwargs, "shifts", self.shifts, N)
+        self._setdefault_as_list(kwargs, "seps", self.seps, N)
         _formater = kwargs.setdefault("_formater", self.align)
         formated_elts = []
         for i, elt in enumerate(elts):
@@ -260,9 +271,9 @@ class LineFormater(object):
 
     def multi_spread(self, elts, **kwargs):
         """
-        >>> LF = LineFormater(length=30)
+        >>> LF = LineFormater(length=30, pads=1)
         >>> LF.multi_spread([["A1", "A2", "A3"],["B1", "B2"]])
-        'A1    A2    A3 B1           B2'
+        ' A1   A2   A3   B1         B2 '
         """
         kwargs.setdefault("justs", "s")
         return self.multi_align(elts, **kwargs)
