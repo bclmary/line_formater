@@ -4,26 +4,6 @@
 
 class LineFormater(object):
 
-    # Single form of attributes
-    length = 80
-    just = "l"
-    pad =   0
-    l_pad = None
-    r_pad = None
-    shift = 0
-    sep = " "
-    tip = ""
-    crop = True
-    # Plural form of attributes
-    lengths = None
-    justs = "l"
-    pads = 0
-    l_pads = None
-    r_pads = None
-    shifts = 0
-    seps = " "
-    tips = ""
-
     _align_parser = {
         "l": "ljust",
         "r": "rjust",
@@ -32,7 +12,29 @@ class LineFormater(object):
         }
 
     def __init__(self, **kwargs):
+        self.reset()
         self.set(**kwargs)
+
+    def reset(self):
+        # Single form of attributes
+        self.length = 80
+        self.just = "l"
+        self.pad =   0
+        self.l_pad = None
+        self.r_pad = None
+        self.shift = 0
+        self.sep = " "
+        self.tip = ""
+        self.crop = True
+        # Plural form of attributes
+        self.lengths = None
+        self.justs = "l"
+        self.pads = 0
+        self.l_pads = None
+        self.r_pads = None
+        self.shifts = 0
+        self.seps = " "
+        self.tips = ""
 
     def set(self, **kwargs):
         # Single form of key word arguments
