@@ -2,300 +2,325 @@
 # -*- coding: utf8 -*-
 
 
-_align_parser = {
-    "l": "ljust",
-    "r": "rjust",
-    "c": "center",
-    "s": "center",
-    }
+class LineFormater(object):
 
-def align(elts, length, **kwargs):
-    """
-    >>> align("content", 20, just="c")
-    '      content       '
-    >>> align("very_long_content", 12, just="l")
-    'very_long_co'
-    >>> align("very_long_content", 12, just="r")
-    'long_content'
-    >>> align("very_long_content", 12, just="c")
-    'ry_long_cont'
-    >>> align("very_long_content", 12, just="c", crop=False)
-    'very_long_content'
-    >>> align(["elt1", "elt2", "elt3"], 20, just="c", tip="|", sep=":", pad=1)
-    ' | elt1:elt2:elt3 | '
-    """
-    just =  kwargs.setdefault("just",  "l")
-    pad =   kwargs.setdefault("pad",   0)
-    l_pad = kwargs.setdefault("l_pad", pad)
-    r_pad = kwargs.setdefault("r_pad", pad)
-    shift = kwargs.setdefault("shift", 0)
-    sep =   kwargs.setdefault("sep",   " ")
-    tip =   kwargs.setdefault("tip",   "")
-    crop =  kwargs.setdefault("crop",  True)
-    elts = elts if isinstance(elts, (tuple, list)) else [elts]
-    elts = [str(elt) for elt in elts]
-    length = length - l_pad - r_pad - len(tip)*2
-    space, retained = 1, False
-    if just == "s":
-        n_chars = sum([len(elt) for elt in elts])
-        space = max(1, (length - n_chars) // (len(elts) - 1))
-        retained = (length - n_chars) % (len(elts) - 1)
-    txt = (sep * space).join(elts)
-    if retained:
-        i = txt.rfind(" ")
-        txt = txt[:i] + " " + txt[i:]
-    txt = getattr(txt, _align_parser[just])(length)
-    if shift > 0:
-        txt = " "*shift + txt[:-shift]
-    if shift < 0:
-        txt = txt[-shift:] + " "*-shift
-    if crop and len(txt) > length:
-        n = len(txt) - length
-        if just == "l":
-            txt = txt[:length]
-        if just == "r":
-            txt = txt[n:]
-        if just in ("c", "s"):
-            n1 = n // 2
-            n2 = n // 2 + n % 2
-            txt = txt[n1:-n2]
-    if tip:
-        txt = tip + txt + tip
-    if l_pad > 0:
-        txt = " " * l_pad + txt
-    if r_pad > 0:
-        txt = txt + " " * r_pad
-    return txt
+    length = 80
 
+    _align_parser = {
+        "l": "ljust",
+        "r": "rjust",
+        "c": "center",
+        "s": "center",
+        }
 
-def center(elts, length, **kwargs):
-    """
-    >>> center("content", 20)
-    '      content       '
-    >>> center("content", 20, shift=2)
-    '        content     '
-    >>> center("content", 20, shift=-2)
-    '    content         '
-    >>> center(["elt1", "elt2"], 20, sep=" "*4)
-    '    elt1    elt2    '
-    """
-    kwargs.setdefault("just", "c")
-    return align(elts, length, **kwargs)
+    def __init__(self, length=80):
+        LineFormater.length = length
 
+    @classmethod
+    def align(self, elts, **kwargs):
+        """
+        >>> LF = LineFormater(20)
+        >>> LF.align("content", just="c")
+        '      content       '
+        >>> LF.align(["elt1", "elt2", "elt3"], just="c", tip="|", sep=":", pad=1)
+        ' | elt1:elt2:elt3 | '
+        >>> LF = LineFormater(12)
+        >>> LF.align("very_long_content", just="l")
+        'very_long_co'
+        >>> LF.align("very_long_content", just="r")
+        'long_content'
+        >>> LF.align("very_long_content", just="c")
+        'ry_long_cont'
+        >>> LF.align("very_long_content", just="c", crop=False)
+        'very_long_content'
+        """
+        length = kwargs.setdefault("length", self.length)
+        just =  kwargs.setdefault("just",  "l")
+        pad =   kwargs.setdefault("pad",   0)
+        l_pad = kwargs.setdefault("l_pad", pad)
+        r_pad = kwargs.setdefault("r_pad", pad)
+        shift = kwargs.setdefault("shift", 0)
+        sep =   kwargs.setdefault("sep",   " ")
+        tip =   kwargs.setdefault("tip",   "")
+        crop =  kwargs.setdefault("crop",  True)
+        elts = elts if isinstance(elts, (tuple, list)) else [elts]
+        elts = [str(elt) for elt in elts]
+        length = length - l_pad - r_pad - len(tip)*2
+        space, retained = 1, False
+        if just == "s":
+            n_chars = sum([len(elt) for elt in elts])
+            space = max(1, (length - n_chars) // (len(elts) - 1))
+            retained = (length - n_chars) % (len(elts) - 1)
+        txt = (sep * space).join(elts)
+        if retained:
+            i = txt.rfind(" ")
+            txt = txt[:i] + " " + txt[i:]
+        txt = getattr(txt, self._align_parser[just])(length)
+        if shift > 0:
+            txt = " "*shift + txt[:-shift]
+        if shift < 0:
+            txt = txt[-shift:] + " "*-shift
+        if crop and len(txt) > length:
+            n = len(txt) - length
+            if just == "l":
+                txt = txt[:length]
+            if just == "r":
+                txt = txt[n:]
+            if just in ("c", "s"):
+                n1 = n // 2
+                n2 = n // 2 + n % 2
+                txt = txt[n1:-n2]
+        if tip:
+            txt = tip + txt + tip
+        if l_pad > 0:
+            txt = " " * l_pad + txt
+        if r_pad > 0:
+            txt = txt + " " * r_pad
+        return txt
 
-def left(elts, length, **kwargs):
-    """
-    >>> left("content", 20, l_pad=2)
-    '  content           '
-    """
-    kwargs.setdefault("just", "l")
-    return align(elts, length, **kwargs)
+    @classmethod
+    def center(self, elts, **kwargs):
+        """
+        >>> LF = LineFormater(20)
+        >>> LF.center("content")
+        '      content       '
+        >>> LF.center("content", shift=2)
+        '        content     '
+        >>> LF.center("content", shift=-2)
+        '    content         '
+        >>> LF.center(["elt1", "elt2"], sep=" "*4)
+        '    elt1    elt2    '
+        """
+        kwargs.setdefault("just", "c")
+        return self.align(elts, **kwargs)
 
+    @classmethod
+    def left(self, elts, **kwargs):
+        """
+        >>> LineFormater.left("content", length=20, l_pad=2)
+        '  content           '
+        """
+        kwargs.setdefault("just", "l")
+        return self.align(elts, **kwargs)
 
-def right(elts, length, **kwargs):
-    """
-    >>> right("content", 20, r_pad=2)
-    '           content  '
-    """
-    kwargs.setdefault("just", "r")
-    return align(elts, length, **kwargs)
+    @classmethod
+    def right(self, elts, **kwargs):
+        """
+        >>> LineFormater.right("content", length=20, r_pad=2)
+        '           content  '
+        """
+        kwargs.setdefault("just", "r")
+        return self.align(elts, **kwargs)
 
+    @classmethod
+    def spread(self, elts, **kwargs):
+        """
+        >>> LF = LineFormater(20)
+        >>> LF.spread(["elt1", "elt2", "foo"])
+        'elt1    elt2     foo'
+        >>> LF.spread(["elt1", "elt2", "elt3"], pad=1)
+        ' elt1   elt2   elt3 '
+        >>> LF.spread(["long_content", "very_long_content"])
+        'content very_long_co'
+        """
+        kwargs.setdefault("just", "s")
+        return self.align(elts, **kwargs)
 
-def spread(elts, length, **kwargs):
-    """
-    >>> spread(["elt1", "elt2", "foo"], 20)
-    'elt1    elt2     foo'
-    >>> spread(["elt1", "elt2", "elt3"], 20, pad=1)
-    ' elt1   elt2   elt3 '
-    >>> spread(["long_content", "very_long_content"], 20)
-    'content very_long_co'
-    """
-    kwargs.setdefault("just", "s")
-    return align(elts, length, **kwargs)
+    @classmethod
+    def _setdefault_as_list(self, kwargs, varname, default):
+        N = len(default)
+        var = kwargs.setdefault(varname, default)
+        if not isinstance(var, (tuple, list)):
+            var = [var]*N
+        n_var = len(var) 
+        if n_var < N:
+            var = var + default[n_var:N]
+        elif n_var > N:
+            var = var[:N]
+        var = [default[i] if v is None else v for i, v in enumerate(var)]
+        kwargs[varname] = var
+        return var
 
+    @classmethod
+    def multi_align(self, elts, **kwargs):
+        """
+        >>> LF = LineFormater(30)
+        >>> LF.multi_align(["elt1", "elt2", "elt3"])
+        'elt1      elt2      elt3      '
+        >>> LF.multi_align(["elt1", "elt2", "elt3"], shifts=[2, -1, 1])
+        '  elt1    lt2        elt3     '
+        >>> LF.multi_align(["elt1", "elt2", "elt3"], justs="c", sep="|")
+        '   elt1  |   elt2  |   elt3   '
+        >>> LF.multi_align(["right", "center", "left"], justs=["r", "c", None])
+        '    right   center  left      '
+        >>> LF.multi_align(["long_elt", "very_long_elt", "short"], r_pads=3)
+        'long_e    very_l    short     '
+        >>> LF.multi_align(["elt1", "elt2"], sep="|", pads=1, justs=["r", "l"])
+        '         elt1 | elt2          '
+        """
+        N = len(elts)
+        sep = kwargs.setdefault("sep", " ")
+        tip = kwargs.setdefault("tip", "")
+        length = kwargs.setdefault("length", self.length)
+        actual_length = length - len(sep) * (N-1) -len(tip)*2
+        default_length = actual_length // N
+        default_remain = default_length + actual_length % N
+        default_lengths = [default_length]*(N-1) + [default_remain]
+        lengths = kwargs.setdefault("lengths", default_lengths)
+        self._setdefault_as_list(kwargs, "justs", ["l"]*N)
+        pads = self._setdefault_as_list(kwargs, "pads", [0]*N)
+        self._setdefault_as_list(kwargs, "l_pads", pads)
+        self._setdefault_as_list(kwargs, "r_pads", pads)
+        self._setdefault_as_list(kwargs, "shifts", [0]*N)
+        self._setdefault_as_list(kwargs, "seps", [" "]*N)
+        _formater = kwargs.setdefault("_formater", self.align)
+        formated_elts = []
+        for i, elt in enumerate(elts):
+            i_kwargs = {
+                key[:-1]: value[i]
+                for (key, value) in kwargs.items()
+                if key[-1] == "s"
+                }
+            formated_elts.append(_formater(elt, **i_kwargs))
+        return self.center(formated_elts, **kwargs)
 
-def _setdefault_as_list(kwargs, varname, default):
-    N = len(default)
-    var = kwargs.setdefault(varname, default)
-    if not isinstance(var, (tuple, list)):
-        var = [var]*N
-    n_var = len(var) 
-    if n_var < N:
-        var = var + default[n_var:N]
-    elif n_var > N:
-        var = var[:N]
-    var = [default[i] if v is None else v for i, v in enumerate(var)]
-    kwargs[varname] = var
-    return var
+    @classmethod
+    def multi_center(self, elts, **kwargs):
+        """
+        >>> LineFormater.multi_center(["elt1", "elt2", "elt3"], length=30)
+        '   elt1      elt2      elt3   '
+        """
+        kwargs.setdefault("justs", "c")
+        return self.multi_align(elts, **kwargs)
 
-def multi_align(elts, length, **kwargs):
-    """
-    >>> multi_align(["elt1", "elt2", "elt3"], 30)
-    'elt1      elt2      elt3      '
-    >>> multi_align(["elt1", "elt2", "elt3"], 30, shifts=[2, -1, 1])
-    '  elt1    lt2        elt3     '
-    >>> multi_align(["elt1", "elt2", "elt3"], 30, justs="c", sep="|")
-    '   elt1  |   elt2  |   elt3   '
-    >>> multi_align(["right", "center", "left"], 30, justs=["r", "c", None])
-    '    right   center  left      '
-    >>> multi_align(["long_elt", "very_long_elt", "short"], 30, r_pads=3)
-    'long_e    very_l    short     '
-    >>> multi_align(["elt1", "elt2"], 20, sep="|", pads=1, justs=["r", "l"])
-    '    elt1 | elt2     '
-    """
-    N = len(elts)
-    sep = kwargs.setdefault("sep", " ")
-    tip = kwargs.setdefault("tip", "")
-    actual_length = length - len(sep) * (N-1) -len(tip)*2
-    default_length = actual_length // N
-    default_remain = default_length + actual_length % N
-    default_lengths = [default_length]*(N-1) + [default_remain]
-    lengths = kwargs.setdefault("lengths", default_lengths)
-    _setdefault_as_list(kwargs, "justs", ["l"]*N)
-    pads = _setdefault_as_list(kwargs, "pads", [0]*N)
-    _setdefault_as_list(kwargs, "l_pads", pads)
-    _setdefault_as_list(kwargs, "r_pads", pads)
-    _setdefault_as_list(kwargs, "shifts", [0]*N)
-    _setdefault_as_list(kwargs, "seps", [" "]*N)
-    _formater = kwargs.setdefault("_formater", align)
-    txt_elts = []
-    for i, elt in enumerate(elts):
-        i_kwargs = {
-            key[:-1]: value[i]
-            for (key, value) in kwargs.items()
-            if key[-1] == "s"
-            }
-        txt_elts.append(_formater(elt, **i_kwargs))
-    return center(txt_elts, length, **kwargs)
+    @classmethod
+    def multi_right(self, elts, **kwargs):
+        """
+        >>> LineFormater.multi_right(["elt1", "elt2", "elt3"], length=30)
+        '     elt1      elt2       elt3'
+        """
+        kwargs.setdefault("justs", "r")
+        return self.multi_align(elts, **kwargs)
 
-def multi_center(elts, length, **kwargs):
-    """
-    >>> multi_center(["elt1", "elt2", "elt3"], 30)
-    '   elt1      elt2      elt3   '
-    """
-    kwargs.setdefault("justs", "c")
-    return multi_align(elts, length, **kwargs)
+    @classmethod
+    def multi_left(self, elts, **kwargs):
+        """
+        >>> LineFormater.multi_left(["elt1", "elt2", "elt3"], length=30)
+        'elt1      elt2      elt3      '
+        """
+        kwargs.setdefault("justs", "l")
+        return self.multi_align(elts, **kwargs)
 
-def multi_right(elts, length, **kwargs):
-    """
-    >>> multi_right(["elt1", "elt2", "elt3"], 30)
-    '     elt1      elt2       elt3'
-    """
-    kwargs.setdefault("justs", "r")
-    return multi_align(elts, length, **kwargs)
+    @classmethod
+    def multi_spread(self, elts, **kwargs):
+        """
+        >>> LineFormater.multi_spread([["A1", "A2", "A3"],["B1", "B2"]], length=30)
+        'A1    A2    A3 B1           B2'
+        """
+        kwargs.setdefault("justs", "s")
+        return self.multi_align(elts, **kwargs)
 
-def multi_left(elts, length, **kwargs):
-    """
-    >>> multi_left(["elt1", "elt2", "elt3"], 30)
-    'elt1      elt2      elt3      '
-    """
-    kwargs.setdefault("justs", "l")
-    return multi_align(elts, length, **kwargs)
+    @classmethod
+    def _right_left(self, elts, **kwargs):
+        """
+        >>> LF = LineFormater(20)
+        >>> LF._right_left(["rjust", "ljust"])
+        '    rjust ljust     '
+        >>> LF._right_left(["elt1", "elt2"], sep="|", pads=1)
+        '    elt1 | elt2     '
+        >>> LF._right_left(["my_var", 1], sep=": ", shift=3)
+        '      my_var: 1     '
+        """
+        kwargs.setdefault("justs", ["r","l"])
+        return self.multi_align(elts, **kwargs)
 
+    @classmethod
+    def table(self, elts, **kwargs):
+        """
+        >>> LF = LineFormater(34)
+        >>> LF.table(["elt1", "elt2", "elt3"])
+        '| elt1     | elt2     | elt3     |'
+        >>> LF.table(["elt1", "elt2", "elt3"], justs=["l", "c", "r"])
+        '| elt1     |   elt2   |     elt3 |'
+        >>> LF.table(["elt1", "elt2", "elt3"], justs="c")
+        '|   elt1   |   elt2   |   elt3   |'
+        >>> LF.table(["elt1", "elt2", "elt3"], justs="r")
+        '|     elt1 |     elt2 |     elt3 |'
+        """
+        kwargs.setdefault("sep", "|")
+        kwargs.setdefault("tip", "|")
+        kwargs.setdefault("justs", "l")
+        kwargs.setdefault("pads", 1)
+        return self.multi_align(elts, **kwargs)
 
-def multi_spread(elts, length, **kwargs):
-    """
-    >>> multi_spread([["A1", "A2", "A3"],["B1", "B2"]], 30)
-    'A1    A2    A3 B1           B2'
-    """
-    kwargs.setdefault("justs", "s")
-    return multi_align(elts, length, **kwargs)
+    @classmethod
+    def table_center(self, elts, **kwargs):
+        """
+        >>> LineFormater.table_center(["elt1", "elt2", "elt3"], length=34)
+        '|   elt1   |   elt2   |   elt3   |'
+        """
+        kwargs.setdefault("justs", "c")
+        return self.table(elts, **kwargs)
 
-def _right_left(elts, length, **kwargs):
-    """
-    >>> _right_left(["rjust", "ljust"], 20)
-    '    rjust ljust     '
-    >>> _right_left(["elt1", "elt2"], 20, sep="|", pads=1)
-    '    elt1 | elt2     '
-    >>> _right_left(["my_var", 1], 20, sep=": ", shift=3)
-    '      my_var: 1     '
-    """
-    kwargs.setdefault("justs", ["r","l"])
-    return multi_align(elts, length, **kwargs)
+    @classmethod
+    def table_left(self, elts, **kwargs):
+        """
+        >>> LineFormater.table_left(["elt1", "elt2", "elt3"], length=34)
+        '| elt1     | elt2     | elt3     |'
+        """
+        kwargs.setdefault("justs", "l")
+        return self.table(elts, **kwargs)
 
+    @classmethod
+    def table_right(self, elts, **kwargs):
+        """
+        >>> LineFormater.table_right(["elt1", "elt2", "elt3"], length=34)
+        '|     elt1 |     elt2 |     elt3 |'
+        """
+        kwargs.setdefault("justs", "r")
+        return self.table(elts, **kwargs)
 
-def table(elts, length, **kwargs):
-    """
-    >>> table(["elt1", "elt2", "elt3"], 34, justs=["l", "c", "r"])
-    '| elt1     |   elt2   |     elt3 |'
-    >>> table(["elt1", "elt2", "elt3"], 34)
-    '| elt1     | elt2     | elt3     |'
-    >>> table(["elt1", "elt2", "elt3"], 34, justs="c")
-    '|   elt1   |   elt2   |   elt3   |'
-    >>> table(["elt1", "elt2", "elt3"], 34, justs="r")
-    '|     elt1 |     elt2 |     elt3 |'
-    """
-    kwargs.setdefault("sep", "|")
-    kwargs.setdefault("tip", "|")
-    kwargs.setdefault("justs", "l")
-    kwargs.setdefault("pads", 1)
-    return multi_align(elts, length, **kwargs)
+    @classmethod
+    def table_spread(self, elts, **kwargs):
+        """
+        >>> LineFormater.table_spread([["A1", "A2", "A3"],["B1", "B2"]], length=30)
+        '| A1  A2   A3 | B1        B2 |'
+        """
+        kwargs.setdefault("justs", "s")
+        return self.table(elts, **kwargs)
 
-def table_center(elts, length, **kwargs):
-    """
-    >>> table_center(["elt1", "elt2", "elt3"], 34)
-    '|   elt1   |   elt2   |   elt3   |'
-    """
-    kwargs.setdefault("justs", "c")
-    return table(elts, length, **kwargs)
+    @classmethod
+    def dictionary(self, key, value, **kwargs):
+        """
+        >>> LineFormater.dictionary("key", "value", length=20)
+        '      key: value    '
+        """
+        kwargs.setdefault("sep", ": ")
+        return self._right_left([key, value], **kwargs)
 
-def table_left(elts, length, **kwargs):
-    """
-    >>> table_left(["elt1", "elt2", "elt3"], 34)
-    '| elt1     | elt2     | elt3     |'
-    """
-    kwargs.setdefault("justs", "l")
-    return table(elts, length, **kwargs)
+    @classmethod
+    def multi_dictionary(self, keys, values, **kwargs):
+        """
+        >>> LF = LineFormater(30)
+        >>> LF.multi_dictionary(["key1", "key2"], ["value1", "value2"])
+        '  key1: value1   key2: value2 '
+        >>> LF.multi_dictionary(["var1", "var2"], [1, 2], shifts=2, sep="|")
+        '    var1: 1   |    var2: 2    '
+        """
+        kwargs.setdefault("_formater", self._right_left)
+        kwargs.setdefault("seps", ": ")
+        return self.multi_align(list(zip(keys, values)), **kwargs)
 
-def table_right(elts, length, **kwargs):
-    """
-    >>> table_right(["elt1", "elt2", "elt3"], 34)
-    '|     elt1 |     elt2 |     elt3 |'
-    """
-    kwargs.setdefault("justs", "r")
-    return table(elts, length, **kwargs)
-
-def table_spread(elts, length, **kwargs):
-    """
-    >>> table_spread([["A1", "A2", "A3"],["B1", "B2"]], 30)
-    '| A1  A2   A3 | B1        B2 |'
-    """
-    kwargs.setdefault("justs", "s")
-    return table(elts, length, **kwargs)
-
-
-
-def dictionary(key, value, length, **kwargs):
-    """
-    >>> dictionary("key", "value", 20)
-    '      key: value    '
-    """
-    kwargs.setdefault("sep", ": ")
-    return _right_left([key, value], length, **kwargs)
-
-
-def multi_dictionary(keys, values, length, **kwargs):
-    """
-    >>> multi_dictionary(["key1", "key2"], ["value1", "value2"], 30)
-    '  key1: value1   key2: value2 '
-    >>> multi_dictionary(["var1", "var2"], [1, 2], 28, shifts=2, sep="|")
-    '   var1: 1   |    var2: 2   '
-    """
-    kwargs.setdefault("_formater", _right_left)
-    kwargs.setdefault("seps", ": ")
-    elts = list(zip(keys, values))
-    return multi_align(elts, length, **kwargs)
-
-
-def table_dictionary(keys, values, length, **kwargs):
-    """
-    >>> table_dictionary(["key1", "key2"], ["value1", "value2"], 42, shifts=-2)
-    '|   key1: value1    |    key2: value2    |'
-    """
-    kwargs.setdefault("_formater", _right_left)
-    kwargs.setdefault("seps", ": ")
-    elts = list(zip(keys, values))
-    return table(elts, length, **kwargs)
+    @classmethod
+    def table_dictionary(self, keys, values, **kwargs):
+        """
+        >>> LF = LineFormater(42)
+        >>> LF.table_dictionary(["key1", "key2"], ["value1", "value2"], shifts=-2)
+        '|   key1: value1    |    key2: value2    |'
+        """
+        kwargs.setdefault("_formater", self._right_left)
+        kwargs.setdefault("seps", ": ")
+        return self.table(list(zip(keys, values)), **kwargs)
 
 
 
