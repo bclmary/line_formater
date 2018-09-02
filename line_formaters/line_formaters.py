@@ -114,20 +114,8 @@ def spread(elts, length, **kwargs):
     return align(elts, length, **kwargs)
 
 
-def _setdefault_as_list_(kwargs, varname, default, N):
-    var = kwargs.setdefault(varname, [default]*N)
-    if not isinstance(var, (tuple, list)):
-        var = [var]*N
-    n_var = len(var) 
-    if n_var < N:
-        var = var + [default] * (N - n_var)
-    elif n_var > N:
-        var = var[:N]
-    return [default if v is None else v for v in var]
-
-def _setdefault_as_list(kwargs, varname, default, N):
-    if not isinstance(default, (tuple, list)):
-        default = [default]*N
+def _setdefault_as_list(kwargs, varname, default):
+    N = len(default)
     var = kwargs.setdefault(varname, default)
     if not isinstance(var, (tuple, list)):
         var = [var]*N
@@ -136,12 +124,11 @@ def _setdefault_as_list(kwargs, varname, default, N):
         var = var + default[n_var:N]
     elif n_var > N:
         var = var[:N]
-    default_unit = default[0]
-    var = [default_unit if v is None else v for v in var]
+    var = [default[i] if v is None else v for i, v in enumerate(var)]
     kwargs[varname] = var
     return var
 
-def multi_align(elts, length, _formater=align, **kwargs):
+def multi_align(elts, length, **kwargs):
     """
     >>> multi_align(["elt1", "elt2", "elt3"], 30)
     'elt1      elt2      elt3      '
@@ -164,11 +151,13 @@ def multi_align(elts, length, _formater=align, **kwargs):
     default_remain = default_length + actual_length % N
     default_lengths = [default_length]*(N-1) + [default_remain]
     lengths = kwargs.setdefault("lengths", default_lengths)
-    _setdefault_as_list(kwargs, "justs", "l", N)
-    pads = _setdefault_as_list(kwargs, "pads", 0, N)
-    _setdefault_as_list(kwargs, "l_pads", pads, N)
-    _setdefault_as_list(kwargs, "r_pads", pads, N)
-    _setdefault_as_list(kwargs, "shifts", 0, N)
+    _setdefault_as_list(kwargs, "justs", ["l"]*N)
+    pads = _setdefault_as_list(kwargs, "pads", [0]*N)
+    _setdefault_as_list(kwargs, "l_pads", pads)
+    _setdefault_as_list(kwargs, "r_pads", pads)
+    _setdefault_as_list(kwargs, "shifts", [0]*N)
+    _setdefault_as_list(kwargs, "seps", [" "]*N)
+    _formater = kwargs.setdefault("_formater", align)
     txt_elts = []
     for i, elt in enumerate(elts):
         i_kwargs = {
@@ -212,27 +201,18 @@ def multi_spread(elts, length, **kwargs):
     kwargs.setdefault("justs", "s")
     return multi_align(elts, length, **kwargs)
 
-
-def right_left(elt1, elt2, length, **kwargs):
+def _right_left(elts, length, **kwargs):
     """
-    >>> right_left("rjust", "ljust", 20)
+    >>> _right_left(["rjust", "ljust"], 20)
     '    rjust ljust     '
-    >>> right_left("elt1", "elt2", 20, sep="|", pads=1)
+    >>> _right_left(["elt1", "elt2"], 20, sep="|", pads=1)
     '    elt1 | elt2     '
-    >>> right_left("my_var", 1, 20, sep=": ", shift=3)
+    >>> _right_left(["my_var", 1], 20, sep=": ", shift=3)
     '      my_var: 1     '
     """
     kwargs.setdefault("justs", ["r","l"])
-    return multi_align([elt1, elt2], length, **kwargs)
+    return multi_align(elts, length, **kwargs)
 
-#def dictionary(key, value, length, **kwargs):
-#    """
-#    >>> dictionary("rjust", "ljust", 20)
-#    '    rjust: ljust    '
-#    """
-#    kwargs.setdefault("justs", ["r","l"])
-#    kwargs.setdefault("sep", ": ")
-#    return multi_align([key, value], length, **kwargs)
 
 def table(elts, length, **kwargs):
     """
@@ -284,51 +264,38 @@ def table_spread(elts, length, **kwargs):
     return table(elts, length, **kwargs)
 
 
-def multi_right_left(elts1, elts2, length, **kwargs):
-    """
-#    >>> multi_right_left(["A", "B"], [1, 2], 20, seps=":")
-#    '   A:1       B:2    '
-#    >>> multi_right_left(["var1", "var2"], [1, 2], 28, sep="|", seps=": ")
-#    '  var1: 1    |  var2: 2     '
-#    >>> multi_right_left(["var1", "var2"], [1, 2], 28, seps=": ", shifts=2)
-#    '    var1: 1       var2: 2   '
-    """
-#    N = min(len(elts1), len(elts2))
-#    seps = _setdefault_as_list_(kwargs, "seps", " ", N)
-#    elts = []
-#    kwargss = {key: value for (key, value) in kwargs.items() if key[-1] == "s"}
-#    kwargs = {key: value for (key, value) in kwargs.items() if key[-1] != "s"}
-#    for i, (elt1, elt2) in enumerate(zip(elts1, elts2)):
-#        i_kwargs = {key[:-1]:value[i] for (key, value) in kwargss.items()}
-#        elts.append(right_left(elt1, elt2, length, **i_kwargs))
-    return multi_center(elts, length, right_left, **kwargs)
 
-#def multi_dictionary(keys, values, length, **kwargs):
-#    """
-#    >>> multi_dictionary(["A", "B"], [1, 2], 20)
-#    '   A: 1      B: 2   '
-#    >>> multi_dictionary(["var1", "var2"], [1, 2], 28, sep="|")
-#    '  var1: 1    |  var2: 2     '
-#    >>> multi_dictionary(["var1", "var2"], [1, 2], 28, shifts=2)
-#    '    var1: 1       var2: 2   '
-#    """
-#    N = min(len(keys), len(values))
-#    # i_kwargs
-#    # sep = seps[i]
-#    # 
-#    # 
-#    seps = _setdefault_as_list(kwargs, "seps", ": ", N)
-#    elts = []
-#    i_kwargs = kwargs.copy()
-#    for key in ("sep", "shift", "seps", )
-#    i_kwargs.pop("sep", None)
-#    i_kwargs.pop("seps", None)
-#    i_kwargs.pop("shift", None)
-#    i_kwargs.pop("shifts", None)
-#    for i, (key, value) in enumerate(zip(keys, values)):
-#        tmp = dictionary(key, value, length, sep=seps[i], **i_kwargs)
-#        elts.append(tmp)
-#    return multi_center(elts, length, **kwargs)
+def dictionary(key, value, length, **kwargs):
+    """
+    >>> dictionary("key", "value", 20)
+    '      key: value    '
+    """
+    kwargs.setdefault("sep", ": ")
+    return _right_left([key, value], length, **kwargs)
+
+
+def multi_dictionary(keys, values, length, **kwargs):
+    """
+    >>> multi_dictionary(["key1", "key2"], ["value1", "value2"], 30)
+    '  key1: value1   key2: value2 '
+    >>> multi_dictionary(["var1", "var2"], [1, 2], 28, shifts=2, sep="|")
+    '   var1: 1   |    var2: 2   '
+    """
+    kwargs.setdefault("_formater", _right_left)
+    kwargs.setdefault("seps", ": ")
+    elts = list(zip(keys, values))
+    return multi_align(elts, length, **kwargs)
+
+
+def table_dictionary(keys, values, length, **kwargs):
+    """
+    >>> table_dictionary(["key1", "key2"], ["value1", "value2"], 42, shifts=-2)
+    '|   key1: value1    |    key2: value2    |'
+    """
+    kwargs.setdefault("_formater", _right_left)
+    kwargs.setdefault("seps", ": ")
+    elts = list(zip(keys, values))
+    return table(elts, length, **kwargs)
 
 
 
