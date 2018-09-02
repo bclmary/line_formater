@@ -114,7 +114,7 @@ def spread(elts, length, **kwargs):
     return align(elts, length, **kwargs)
 
 
-def _setdefault_as_list(kwargs, varname, default, N):
+def _setdefault_as_list_(kwargs, varname, default, N):
     var = kwargs.setdefault(varname, [default]*N)
     if not isinstance(var, (tuple, list)):
         var = [var]*N
@@ -125,8 +125,23 @@ def _setdefault_as_list(kwargs, varname, default, N):
         var = var[:N]
     return [default if v is None else v for v in var]
 
+def _setdefault_as_list(kwargs, varname, default, N):
+    if not isinstance(default, (tuple, list)):
+        default = [default]*N
+    var = kwargs.setdefault(varname, default)
+    if not isinstance(var, (tuple, list)):
+        var = [var]*N
+    n_var = len(var) 
+    if n_var < N:
+        var = var + default[n_var:N]
+    elif n_var > N:
+        var = var[:N]
+    default_unit = default[0]
+    var = [default_unit if v is None else v for v in var]
+    kwargs[varname] = var
+    return var
 
-def multi_align(elts, length, **kwargs):
+def multi_align(elts, length, _formater=align, **kwargs):
     """
     >>> multi_align(["elt1", "elt2", "elt3"], 30)
     'elt1      elt2      elt3      '
@@ -144,31 +159,24 @@ def multi_align(elts, length, **kwargs):
     N = len(elts)
     sep = kwargs.setdefault("sep", " ")
     tip = kwargs.setdefault("tip", "")
-    justs =  _setdefault_as_list(kwargs, "justs",  "l",     N)
-    pads =   _setdefault_as_list(kwargs, "pads",   0,       N)
-    l_pads = _setdefault_as_list(kwargs, "l_pads", pads[0], N)
-    r_pads = _setdefault_as_list(kwargs, "r_pads", pads[0], N)
-    shifts = _setdefault_as_list(kwargs, "shifts", 0,       N)
     actual_length = length - len(sep) * (N-1) -len(tip)*2
     default_length = actual_length // N
     default_remain = default_length + actual_length % N
     default_lengths = [default_length]*(N-1) + [default_remain]
     lengths = kwargs.setdefault("lengths", default_lengths)
+    _setdefault_as_list(kwargs, "justs", "l", N)
+    pads = _setdefault_as_list(kwargs, "pads", 0, N)
+    _setdefault_as_list(kwargs, "l_pads", pads, N)
+    _setdefault_as_list(kwargs, "r_pads", pads, N)
+    _setdefault_as_list(kwargs, "shifts", 0, N)
     txt_elts = []
     for i, elt in enumerate(elts):
-        i_args = (
-            elt,
-            lengths[i],
-            )
         i_kwargs = {
-            "just": justs[i],
-            "pad":   pads[i],
-            "l_pad": l_pads[i],
-            "r_pad": r_pads[i],
-            "shift": shifts[i],
-            "crop":  True,
+            key[:-1]: value[i]
+            for (key, value) in kwargs.items()
+            if key[-1] == "s"
             }
-        txt_elts.append(align(*i_args, **i_kwargs))
+        txt_elts.append(_formater(elt, **i_kwargs))
     return center(txt_elts, length, **kwargs)
 
 def multi_center(elts, length, **kwargs):
@@ -214,7 +222,17 @@ def right_left(elt1, elt2, length, **kwargs):
     >>> right_left("my_var", 1, 20, sep=": ", shift=3)
     '      my_var: 1     '
     """
-    return multi_align([elt1, elt2], length, justs=["r","l"], **kwargs)
+    kwargs.setdefault("justs", ["r","l"])
+    return multi_align([elt1, elt2], length, **kwargs)
+
+#def dictionary(key, value, length, **kwargs):
+#    """
+#    >>> dictionary("rjust", "ljust", 20)
+#    '    rjust: ljust    '
+#    """
+#    kwargs.setdefault("justs", ["r","l"])
+#    kwargs.setdefault("sep", ": ")
+#    return multi_align([key, value], length, **kwargs)
 
 def table(elts, length, **kwargs):
     """
@@ -268,25 +286,49 @@ def table_spread(elts, length, **kwargs):
 
 def multi_right_left(elts1, elts2, length, **kwargs):
     """
-    >>> multi_right_left(["A", "B"], [1, 2], 20, seps=":")
-    '   A:1       B:2    '
-    >>> multi_right_left(["var1", "var2"], [1, 2], 28, sep="|", seps=": ")
-    '  var1: 1    |  var2: 2     '
-    >>> multi_right_left(["var1", "var2"], [1, 2], 28, seps=": ", shifts=2)
-    '    var1: 1       var2: 2   '
+#    >>> multi_right_left(["A", "B"], [1, 2], 20, seps=":")
+#    '   A:1       B:2    '
+#    >>> multi_right_left(["var1", "var2"], [1, 2], 28, sep="|", seps=": ")
+#    '  var1: 1    |  var2: 2     '
+#    >>> multi_right_left(["var1", "var2"], [1, 2], 28, seps=": ", shifts=2)
+#    '    var1: 1       var2: 2   '
     """
-    N = min(len(elts1), len(elts2))
-    seps = _setdefault_as_list(kwargs, "seps", " ", N)
-    elts = []
-    i_kwargs = kwargs.copy()
-    i_kwargs.pop("sep", None)
-    i_kwargs.pop("shifts", None)
-    i_kwargs.pop("shift", None)
-    for i, (elt1, elt2) in enumerate(zip(elts1, elts2)):
-        tmp = right_left(elt1, elt2, length, sep=seps[i], **i_kwargs)
-        elts.append(tmp)
-    return multi_center(elts, length, **kwargs)
+#    N = min(len(elts1), len(elts2))
+#    seps = _setdefault_as_list_(kwargs, "seps", " ", N)
+#    elts = []
+#    kwargss = {key: value for (key, value) in kwargs.items() if key[-1] == "s"}
+#    kwargs = {key: value for (key, value) in kwargs.items() if key[-1] != "s"}
+#    for i, (elt1, elt2) in enumerate(zip(elts1, elts2)):
+#        i_kwargs = {key[:-1]:value[i] for (key, value) in kwargss.items()}
+#        elts.append(right_left(elt1, elt2, length, **i_kwargs))
+    return multi_center(elts, length, right_left, **kwargs)
 
+#def multi_dictionary(keys, values, length, **kwargs):
+#    """
+#    >>> multi_dictionary(["A", "B"], [1, 2], 20)
+#    '   A: 1      B: 2   '
+#    >>> multi_dictionary(["var1", "var2"], [1, 2], 28, sep="|")
+#    '  var1: 1    |  var2: 2     '
+#    >>> multi_dictionary(["var1", "var2"], [1, 2], 28, shifts=2)
+#    '    var1: 1       var2: 2   '
+#    """
+#    N = min(len(keys), len(values))
+#    # i_kwargs
+#    # sep = seps[i]
+#    # 
+#    # 
+#    seps = _setdefault_as_list(kwargs, "seps", ": ", N)
+#    elts = []
+#    i_kwargs = kwargs.copy()
+#    for key in ("sep", "shift", "seps", )
+#    i_kwargs.pop("sep", None)
+#    i_kwargs.pop("seps", None)
+#    i_kwargs.pop("shift", None)
+#    i_kwargs.pop("shifts", None)
+#    for i, (key, value) in enumerate(zip(keys, values)):
+#        tmp = dictionary(key, value, length, sep=seps[i], **i_kwargs)
+#        elts.append(tmp)
+#    return multi_center(elts, length, **kwargs)
 
 
 
