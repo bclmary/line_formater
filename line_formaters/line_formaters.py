@@ -8,8 +8,8 @@ class LineFormater(object):
     length = 80
     just = "l"
     pad =   0
-    l_pad = 0
-    r_pad = 0
+    l_pad = None
+    r_pad = None
     shift = 0
     sep = " "
     tip = ""
@@ -36,8 +36,8 @@ class LineFormater(object):
         self.length = kwargs.get("length", self.length)
         self.just =  kwargs.get("just",  self.just)
         self.pad =   kwargs.get("pad", self.pad)
-        self.l_pad = kwargs.get("l_pad", self.pad)
-        self.r_pad = kwargs.get("r_pad", self.pad)
+        self.l_pad = kwargs.get("l_pad", self.l_pad)
+        self.r_pad = kwargs.get("r_pad", self.r_pad)
         self.shift = kwargs.get("shift", self.shift)
         self.sep =   kwargs.get("sep",   self.sep)
         self.tip =   kwargs.get("tip",   self.tip)
@@ -74,8 +74,10 @@ class LineFormater(object):
         length = kwargs.get("length", self.length)
         just =   kwargs.get("just",   self.just)
         pad =    kwargs.get("pad",    self.pad)
-        l_pad =  kwargs.get("l_pad",  pad)
-        r_pad =  kwargs.get("r_pad",  pad)
+        l_pad =  kwargs.get("l_pad",  self.l_pad)
+        r_pad =  kwargs.get("r_pad",  self.r_pad)
+        l_pad = pad if l_pad is None else l_pad
+        r_pad = pad if r_pad is None else r_pad
         shift =  kwargs.get("shift",  self.shift)
         sep =    kwargs.get("sep",    self.sep)
         tip =    kwargs.get("tip",    self.tip)
@@ -134,7 +136,8 @@ class LineFormater(object):
 
     def left(self, elts, **kwargs):
         """
-        >>> LineFormater().left("content", length=20, l_pad=2)
+        >>> LF = LineFormater(length=20, l_pad=2)
+        >>> LF.left("content")
         '  content           '
         """
         kwargs.setdefault("just", "l")
@@ -143,7 +146,8 @@ class LineFormater(object):
 
     def right(self, elts, **kwargs):
         """
-        >>> LineFormater().right("content", length=20, r_pad=2)
+        >>> LF = LineFormater(length=20, r_pad=2)
+        >>> LF.right("content")
         '           content  '
         """
         kwargs.setdefault("just", "r")
@@ -157,8 +161,10 @@ class LineFormater(object):
         'elt1    elt2     foo'
         >>> LF.spread(["elt1", "elt2", "elt3"], pad=1)
         ' elt1   elt2   elt3 '
-        >>> LF.spread(["long_content", "very_long_content"])
-        'content very_long_co'
+        >>> LF.spread(["longcontent", "verylongcontent"])
+        'gcontent verylongcon'
+        >>> LF.spread(["longcontent", "verylongcontent"], crop=False)
+        'longcontent verylongcontent'
         """
         kwargs.setdefault("just", "s")
         return self.align(elts, **kwargs)
@@ -224,7 +230,8 @@ class LineFormater(object):
 
     def multi_center(self, elts, **kwargs):
         """
-        >>> LineFormater().multi_center(["elt1", "elt2", "elt3"], length=30)
+        >>> LF = LineFormater(length=30)
+        >>> LF.multi_center(["elt1", "elt2", "elt3"])
         '   elt1      elt2      elt3   '
         """
         kwargs.setdefault("justs", "c")
@@ -233,7 +240,8 @@ class LineFormater(object):
 
     def multi_right(self, elts, **kwargs):
         """
-        >>> LineFormater().multi_right(["elt1", "elt2", "elt3"], length=30)
+        >>> LF = LineFormater(length=30)
+        >>> LF.multi_right(["elt1", "elt2", "elt3"])
         '     elt1      elt2       elt3'
         """
         kwargs.setdefault("justs", "r")
@@ -242,7 +250,8 @@ class LineFormater(object):
 
     def multi_left(self, elts, **kwargs):
         """
-        >>> LineFormater().multi_left(["elt1", "elt2", "elt3"], length=30)
+        >>> LF = LineFormater(length=30)
+        >>> LF.multi_left(["elt1", "elt2", "elt3"])
         'elt1      elt2      elt3      '
         """
         kwargs.setdefault("justs", "l")
@@ -251,7 +260,8 @@ class LineFormater(object):
 
     def multi_spread(self, elts, **kwargs):
         """
-        >>> LineFormater().multi_spread([["A1", "A2", "A3"],["B1", "B2"]], length=30)
+        >>> LF = LineFormater(length=30)
+        >>> LF.multi_spread([["A1", "A2", "A3"],["B1", "B2"]])
         'A1    A2    A3 B1           B2'
         """
         kwargs.setdefault("justs", "s")
@@ -293,7 +303,8 @@ class LineFormater(object):
 
     def table_center(self, elts, **kwargs):
         """
-        >>> LineFormater().table_center(["elt1", "elt2", "elt3"], length=34)
+        >>> LF = LineFormater(length=34)
+        >>> LF.table_center(["elt1", "elt2", "elt3"])
         '|   elt1   |   elt2   |   elt3   |'
         """
         kwargs.setdefault("justs", "c")
@@ -302,7 +313,8 @@ class LineFormater(object):
 
     def table_left(self, elts, **kwargs):
         """
-        >>> LineFormater().table_left(["elt1", "elt2", "elt3"], length=34)
+        >>> LF = LineFormater(length=34)
+        >>> LF.table_left(["elt1", "elt2", "elt3"])
         '| elt1     | elt2     | elt3     |'
         """
         kwargs.setdefault("justs", "l")
@@ -311,7 +323,8 @@ class LineFormater(object):
 
     def table_right(self, elts, **kwargs):
         """
-        >>> LineFormater().table_right(["elt1", "elt2", "elt3"], length=34)
+        >>> LF = LineFormater(length=34)
+        >>> LF.table_right(["elt1", "elt2", "elt3"])
         '|     elt1 |     elt2 |     elt3 |'
         """
         kwargs.setdefault("justs", "r")
@@ -320,7 +333,8 @@ class LineFormater(object):
 
     def table_spread(self, elts, **kwargs):
         """
-        >>> LineFormater().table_spread([["A1", "A2", "A3"],["B1", "B2"]], length=30)
+        >>> LF = LineFormater(length=30)
+        >>> LF.table_spread([["A1", "A2", "A3"],["B1", "B2"]])
         '| A1  A2   A3 | B1        B2 |'
         """
         kwargs.setdefault("justs", "s")
@@ -329,7 +343,8 @@ class LineFormater(object):
 
     def dictionary(self, key, value, **kwargs):
         """
-        >>> LineFormater().dictionary("key", "value", length=20)
+        >>> LF = LineFormater(length=20)
+        >>> LF.dictionary("key", "value")
         '      key: value    '
         """
         kwargs.setdefault("sep", ": ")
