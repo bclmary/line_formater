@@ -202,8 +202,8 @@ class LineFormater(object):
         '         elt1 | elt2          '
         """
         N = len(elts)
-        sep = kwargs.setdefault("sep", " ")
-        tip = kwargs.setdefault("tip", "")
+        sep = kwargs.setdefault("sep", self.sep)
+        tip = kwargs.setdefault("tip", self.tip)
         length = kwargs.setdefault("length", self.length)
         actual_length = length - len(sep) * (N-1) -len(tip)*2
         default_length = actual_length // N
@@ -356,7 +356,8 @@ class LineFormater(object):
         >>> LF = LineFormater(length=30)
         >>> LF.multi_dictionary(["key1", "key2"], ["value1", "value2"])
         '  key1: value1   key2: value2 '
-        >>> LF.multi_dictionary(["var1", "var2"], [1, 2], shifts=2, sep="|")
+        >>> LF.sep = "|"
+        >>> LF.multi_dictionary(["var1", "var2"], [1, 2], shifts=2)
         '    var1: 1   |    var2: 2    '
         """
         kwargs.setdefault("_formater", self._right_left)
