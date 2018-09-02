@@ -11,51 +11,45 @@ class LineFormater(object):
         "s": "center",
         }
 
+    _defaults = {
+        # Single form of attributes
+        "length": 80,
+        "just":  "l",
+        "pad":   0,
+        "l_pad": None,
+        "r_pad": None,
+        "shift": 0,
+        "sep":   " ",
+        "tip":   "",
+        "crop":  True,
+        # Plural form of attributes
+        "lengths": None,
+        "justs":   "l",
+        "pads":    0,
+        "l_pads":  None,
+        "r_pads":  None,
+        "shifts":  0,
+        "seps":    " ",
+        "tips":    "",
+        }
+
     def __init__(self, **kwargs):
         self.reset()
         self.set(**kwargs)
 
-    def reset(self):
-        # Single form of attributes
-        self.length = 80
-        self.just = "l"
-        self.pad =   0
-        self.l_pad = None
-        self.r_pad = None
-        self.shift = 0
-        self.sep = " "
-        self.tip = ""
-        self.crop = True
-        # Plural form of attributes
-        self.lengths = None
-        self.justs = "l"
-        self.pads = 0
-        self.l_pads = None
-        self.r_pads = None
-        self.shifts = 0
-        self.seps = " "
-        self.tips = ""
+    def reset(self, *args):
+        if len(args) == 0:
+            for key, value in self._defaults.items():
+                setattr(self, key, value)
+        else:
+            for arg in args:
+                if arg in self._defaults:
+                    setattr(self, arg, self._defaults[arg])
 
     def set(self, **kwargs):
-        # Single form of key word arguments
-        self.length = kwargs.get("length", self.length)
-        self.just =  kwargs.get("just",  self.just)
-        self.pad =   kwargs.get("pad", self.pad)
-        self.l_pad = kwargs.get("l_pad", self.l_pad)
-        self.r_pad = kwargs.get("r_pad", self.r_pad)
-        self.shift = kwargs.get("shift", self.shift)
-        self.sep =   kwargs.get("sep",   self.sep)
-        self.tip =   kwargs.get("tip",   self.tip)
-        self.crop =  kwargs.get("crop",  self.crop)
-        # Plural form of key word argiments
-        self.lengths = kwargs.get("lengths", self.lengths)
-        self.justs =  kwargs.get("justs",  self.justs)
-        self.pads =   kwargs.get("pads", self.pads)
-        self.l_pads = kwargs.get("l_pads", self.l_pads)
-        self.r_pads = kwargs.get("r_pads", self.r_pads)
-        self.shifts = kwargs.get("shifts", self.shifts)
-        self.seps =   kwargs.get("seps",   self.seps)
-        self.tips =   kwargs.get("tips",   self.tips)
+        for key, value in kwargs.items():
+            if key in self._defaults:
+                setattr(self, key, value)
 
     def align(self, elts, **kwargs):
         """
@@ -210,6 +204,9 @@ class LineFormater(object):
         '         elt1 | elt2          '
         >>> LF.multi_align(["elt1", "elt2"], justs="c", tip="|")
         '|     elt1    |     elt2     |'
+        >>> LF.reset("pads", "sep")
+        >>> LF.multi_align(["elt1", "elt2", "elt3"])
+        'elt1      elt2      elt3      '
         """
         N = len(elts)
         sep = kwargs.setdefault("sep", self.sep)
