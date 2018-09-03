@@ -4,10 +4,45 @@
 
 class LineFormater(object):
 
+    """
+    LineFormater() -> new line formater with default values
+    LineFormater(**kwargs) -> new line formater initialized with the name=value
+    pairs in the keyword argument.  For example:  LineFormater(length=20)
+    
+    LF = LineFormater()
+    LF.align(<elt>) --> formated string
+    <elts> can be a single object with __str__ method or an iterable.
+    
+    kwargs
+    ------
+    NAME:   DESCRIPTION..................................(DEFAULT)
+    length: length of formated string....................(80)
+    just:   justification in ["l", "s", "r", "s"]........("l")
+    pad:    left and right padding, ie extra spaces......(0)
+    l_pad:  left padding.................................(None)
+    r_pad:  right padding................................(None)
+    shift:  shift of the content, rightward is positive..(0)
+    sep:    separator between elements...................(" ")
+    tip:    characters at left and right tips............("")
+    crop:   crop the ouput if it doesn't match length....(True)
+
+    kwargs for multi and table contexts
+    -----------------------------------
+    lengths: lengths of columns...........(80)
+    justs:   justifications of columns ...("l")
+    pads:    padding of columns ..........(0)
+    l_pads:  left padding.of columns......(None)
+    r_pads:  right padding.of columns.....(None)
+    shifts:  shifts of columns............(0)
+    seps:    separator inside columns.....(" ")
+    tips:    tips of columns..............("")
+
+    Separate values for each columns can be given using lists.
+    """
+
     _align_parser = {"l": "ljust", "r": "rjust", "c": "center", "s": "center"}
 
     _defaults = {
-        # Single form of attributes
         "length": 80,
         "just": "l",
         "pad": 0,
@@ -17,7 +52,6 @@ class LineFormater(object):
         "sep": " ",
         "tip": "",
         "crop": True,
-        # Plural form of attributes
         "lengths": None,
         "justs": "l",
         "pads": 0,
@@ -33,6 +67,10 @@ class LineFormater(object):
         self.set(**kwargs)
 
     def reset(self, *args):
+        """
+        With no arguments, reset all arguments to defaults, else, reset only
+        given arguments (given as strings).
+        """
         if len(args) == 0:
             for key, value in self._defaults.items():
                 setattr(self, key, value)
@@ -42,26 +80,40 @@ class LineFormater(object):
                     setattr(self, arg, self._defaults[arg])
 
     def set(self, **kwargs):
+        """Set values of the name=value pairs in the keyword argument."""
         for key, value in kwargs.items():
             if key in self._defaults:
                 setattr(self, key, value)
 
     def align(self, elts, **kwargs):
         """
+        Multi purpose formater.
+        All other methods are interfaces of this one.
+        
         >>> LF = LineFormater(length=20)
-        >>> LF.align("content", just="c")
-        '      content       '
+        >>> LF.align("content", l_pad=2)
+        '  content           '
+        >>> LF.align("content", just="r", r_pad=2)
+        '           content  '
+        >>> LF.align("content", just="c", shift=2)
+        '        content     '
+        >>> LF.align(["elt1", "elt2", "elt3"], just="s", pad=1)
+        ' elt1   elt2   elt3 '
+        >>> LF.align(["elt1", "elt2"], just="c", sep="*"*4)
+        '    elt1****elt2    '
         >>> LF.align(["elt1", "elt2", "elt3"], just="c", tip="|", sep=":", pad=1)
         ' | elt1:elt2:elt3 | '
+        >>> LF.align(["longcontent", "verylongcontent"], just="s")
+        'gcontent verylongcon'
+        >>> LF.align(["longcontent", "verylongcontent"], just="s", crop=False)
+        'longcontent verylongcontent'
         >>> LF = LineFormater(length=12)
         >>> LF.align("very_long_content", just="l")
         'very_long_co'
         >>> LF.align("very_long_content", just="r")
         'long_content'
-        >>> LF.align("very_long_content", just="c")
-        'ry_long_cont'
-        >>> LF.align("very_long_content", just="c", crop=False)
-        'very_long_content'
+        >>> LF.align("very_long_content", just="c", shift=-3)
+        'long_content'
         """
         length = kwargs.get("length", self.length)
         just = kwargs.get("just", self.just)
@@ -111,48 +163,44 @@ class LineFormater(object):
 
     def center(self, elts, **kwargs):
         """
+        Center justification.
+        
         >>> LF = LineFormater(length=20)
         >>> LF.center("content")
         '      content       '
-        >>> LF.center("content", shift=2)
-        '        content     '
-        >>> LF.center("content", shift=-2)
-        '    content         '
-        >>> LF.center(["elt1", "elt2"], sep="*"*4)
-        '    elt1****elt2    '
         """
         kwargs.setdefault("just", "c")
         return self.align(elts, **kwargs)
 
     def left(self, elts, **kwargs):
         """
-        >>> LF = LineFormater(length=20, l_pad=2)
+        Left justification.
+        
+        >>> LF = LineFormater(length=20)
         >>> LF.left("content")
-        '  content           '
+        'content             '
         """
         kwargs.setdefault("just", "l")
         return self.align(elts, **kwargs)
 
     def right(self, elts, **kwargs):
         """
-        >>> LF = LineFormater(length=20, r_pad=2)
+        Right justification.
+        
+        >>> LF = LineFormater(length=20)
         >>> LF.right("content")
-        '           content  '
+        '             content'
         """
         kwargs.setdefault("just", "r")
         return self.align(elts, **kwargs)
 
     def spread(self, elts, **kwargs):
         """
+        Spread justification.
+        
         >>> LF = LineFormater(length=20)
         >>> LF.spread(["elt1", "elt2", "foo"])
         'elt1    elt2     foo'
-        >>> LF.spread(["elt1", "elt2", "elt3"], pad=1)
-        ' elt1   elt2   elt3 '
-        >>> LF.spread(["longcontent", "verylongcontent"])
-        'gcontent verylongcon'
-        >>> LF.spread(["longcontent", "verylongcontent"], crop=False)
-        'longcontent verylongcontent'
         """
         kwargs.setdefault("just", "s")
         return self.align(elts, **kwargs)
@@ -177,6 +225,9 @@ class LineFormater(object):
 
     def multi_align(self, elts, **kwargs):
         """
+        Multi purpose formater on columns.
+        All other multi_ or table_ methods are interfaces of this one.
+        
         >>> LF = LineFormater(length=30)
         >>> LF.multi_align(["elt1", "elt2", "elt3"])
         'elt1      elt2      elt3      '
@@ -228,6 +279,8 @@ class LineFormater(object):
 
     def multi_center(self, elts, **kwargs):
         """
+        Center justified columns.
+        
         >>> LF = LineFormater(length=30)
         >>> LF.multi_center(["elt1", "elt2", "elt3"])
         '   elt1      elt2      elt3   '
@@ -237,6 +290,8 @@ class LineFormater(object):
 
     def multi_right(self, elts, **kwargs):
         """
+        Right justified columns.
+        
         >>> LF = LineFormater(length=30)
         >>> LF.multi_right(["elt1", "elt2", "elt3"])
         '     elt1      elt2       elt3'
@@ -246,6 +301,8 @@ class LineFormater(object):
 
     def multi_left(self, elts, **kwargs):
         """
+        Left justified columns.
+        
         >>> LF = LineFormater(length=30)
         >>> LF.multi_left(["elt1", "elt2", "elt3"])
         'elt1      elt2      elt3      '
@@ -255,6 +312,8 @@ class LineFormater(object):
 
     def multi_spread(self, elts, **kwargs):
         """
+        Spread justified columns.
+        
         >>> LF = LineFormater(length=30, pads=1)
         >>> LF.multi_spread([["A1", "A2", "A3"],["B1", "B2"]])
         ' A1   A2   A3   B1         B2 '
@@ -277,15 +336,12 @@ class LineFormater(object):
 
     def table(self, elts, **kwargs):
         """
+        Multi purpose table formater.
+        All other table _methods are interfaces of this one.
+        
         >>> LF = LineFormater(length=34)
-        >>> LF.table(["elt1", "elt2", "elt3"])
-        '| elt1     | elt2     | elt3     |'
         >>> LF.table(["elt1", "elt2", "elt3"], justs=["l", "c", "r"])
         '| elt1     |   elt2   |     elt3 |'
-        >>> LF.table(["elt1", "elt2", "elt3"], justs="c")
-        '|   elt1   |   elt2   |   elt3   |'
-        >>> LF.table(["elt1", "elt2", "elt3"], justs="r")
-        '|     elt1 |     elt2 |     elt3 |'
         """
         kwargs.setdefault("sep", "|")
         kwargs.setdefault("tip", "|")
@@ -295,6 +351,8 @@ class LineFormater(object):
 
     def table_center(self, elts, **kwargs):
         """
+        Center justified tables.
+        
         >>> LF = LineFormater(length=34)
         >>> LF.table_center(["elt1", "elt2", "elt3"])
         '|   elt1   |   elt2   |   elt3   |'
@@ -304,6 +362,8 @@ class LineFormater(object):
 
     def table_left(self, elts, **kwargs):
         """
+        Left justified tables.
+        
         >>> LF = LineFormater(length=34)
         >>> LF.table_left(["elt1", "elt2", "elt3"])
         '| elt1     | elt2     | elt3     |'
@@ -313,6 +373,8 @@ class LineFormater(object):
 
     def table_right(self, elts, **kwargs):
         """
+        Right justified tables.
+        
         >>> LF = LineFormater(length=34)
         >>> LF.table_right(["elt1", "elt2", "elt3"])
         '|     elt1 |     elt2 |     elt3 |'
@@ -322,6 +384,8 @@ class LineFormater(object):
 
     def table_spread(self, elts, **kwargs):
         """
+        Spread justified tables.
+        
         >>> LF = LineFormater(length=30)
         >>> LF.table_spread([["A1", "A2", "A3"],["B1", "B2"]])
         '| A1  A2   A3 | B1        B2 |'
@@ -331,6 +395,9 @@ class LineFormater(object):
 
     def dictionary(self, key, value, **kwargs):
         """
+        Double alignment for key/value pairs
+        Key is right justified, value is left justified. Separator is ': '
+        
         >>> LF = LineFormater(length=20)
         >>> LF.dictionary("key", "value")
         '      key: value    '
@@ -340,6 +407,8 @@ class LineFormater(object):
 
     def multi_dictionary(self, keys, values, **kwargs):
         """
+        Double alignment for colums. 
+        
         >>> LF = LineFormater(length=30)
         >>> LF.multi_dictionary(["key1", "key2"], ["value1", "value2"])
         '  key1: value1   key2: value2 '
@@ -353,6 +422,8 @@ class LineFormater(object):
 
     def table_dictionary(self, keys, values, **kwargs):
         """
+        Double alignment for tables.
+        
         >>> LF = LineFormater(length=42)
         >>> LF.table_dictionary(["key1", "key2"], ["value1", "value2"], shifts=-2)
         '|   key1: value1    |    key2: value2    |'

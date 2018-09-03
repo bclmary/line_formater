@@ -6,11 +6,11 @@ Description
 ===========
 
 A class containing a collection of text line formater methods.
-Each methods get the same signature (except ``dictionary`` and derived).
+Each method get the same signature (except ``dictionary`` and derived).
 
-**Mandatory inputs**:  string or list of strings
+**Mandatory inputs**:  any object with ``__str__`` method or list of objects.
 
-**Output**: string of given length
+**Output**: string of fixed length.
 
 
 Simpe context
@@ -31,18 +31,27 @@ Scheme explaining common key word arguments in *simple context*::
  │         ┆                          ┆         │
  │<┄┄pad┄┄>┆    <┄┄ - shift + ┄┄>     ┆<┄┄pad┄┄>│
 
+Example::
+
+  input = ["elt1", "elt2", "elt3"]
+  length = 18
+  pad = 2
+  sep = "*"
+  output =   "  elt1*elt2*elt3  "
+
+
 
 Multiple context
 ----------------
 
 In multi context, each element of given contents are formated in as many content zones.
-The previously described arguments are still available, and affect the contents zones (and not the contents).
+The previously described arguments are still available, and affect the main content zone (and not the contents).
 See ``length``, ``pad``, ``l_pad``, ``r_pad``, ``shift`` and ``sep``.
-All these arguments can be applied separately on each content zones using the plural form of these arguements.
+All these arguments can be applied separately on each content zones using there plural forms.
 See ``lengths``, ``pads``, ``l_pads``, ``r_pads``, ``shifts`` and ``seps``.
 If a single value is given to these plural form, it will be applied to all the content zones.
 If one wants to set separate values for each plural form, a list must be given.
-Also, if one want to keep the default for some content zones, a None value must be filled at corresponding position. 
+Also, if one want to keep the default for some content zones, a None value must be filled at corresponding positions.
 
 
 Scheme explaining common key word arguments in *multiple context*::
@@ -103,11 +112,11 @@ The content (single positional argment) can be of any type.
 :align:
     multi-purpose simple formater
 
-:center:
-    center alignment
-
 :left:
     left alignment
+
+:center:
+    center alignment
 
 :right:
     right alignment
@@ -124,11 +133,11 @@ The content MUST be an iterable.
 :muti:
    multi-purpose formater in multiples zones
 
-:multi_center: 
-    center alignment in multiples zones
-
 :multi_left: 
     left alignment in multiples zones
+
+:multi_center: 
+    center alignment in multiples zones
 
 :multi_right:
     right alignment in multiples zones
@@ -145,11 +154,11 @@ Same as multi-context.
 :table:
    multi-purpose formater in table
 
-:table_center: 
-    center alignment in table
-
 :table_left: 
     left alignment in table
+
+:table_center: 
+    center alignment in table
 
 :table_right:
     right alignment in table
@@ -161,16 +170,16 @@ Same as multi-context.
 Extra formaters
 ---------------
 
-Two positoinal arguments -- the contents -- are awaited.
+Two positoinal arguments (key, value) are awaited.
 
 :dictionary:
     double alignment for key/value : key is right justified, value is left justified. Separator is ':'
 
 :multi_dictionary: 
-    double alignments for multiple zones
+    double alignments for multiple zones. Key and value positional arguments MUST be lists.
 
 :table_dictionary: 
-    double alignments for table
+    double alignments for table.
 
 
 

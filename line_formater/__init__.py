@@ -37,7 +37,7 @@ A collection of text line formaters.
 
 """
 
-import line_formaters
+from line_formater.line_formater import LineFormater
 
 __all__ = [
     "LineFormater",
