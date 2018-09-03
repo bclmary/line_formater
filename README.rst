@@ -1,13 +1,14 @@
-line_formaters
-##############
+LineFormater
+############
 
 
 Description
 ===========
 
-A collection of text line formaters.
+A class containing a collection of text line formater methods.
+Each methods get the same signature (except ``dictionary`` and derived).
 
-**Mandatory inputs**:  string or list of strings, length
+**Mandatory inputs**:  string or list of strings
 
 **Output**: string of given length
 
@@ -47,7 +48,7 @@ Also, if one want to keep the default for some content zones, a None value must 
 Scheme explaining common key word arguments in *multiple context*::
 
  ┃<┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄length┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄>┃
- ┃     │                                                                           │     ┃
+ ┃    tip                                                                         tip    ┃
  ┃     │                             main content zone                             │     ┃
  ┃     │                                                                           │     ┃
  ┃     │<┄┄┄┄┄┄┄┄┄┄┄┄lengths[0]┄┄┄┄┄┄┄┄┄┄┄>│   │<┄┄┄┄┄┄┄┄┄┄┄lengths[-1]┄┄┄┄┄┄┄┄┄┄┄>│     ┃
@@ -58,6 +59,21 @@ Scheme explaining common key word arguments in *multiple context*::
  ┃     │         ┆               ┆         │   │         ┆               ┆         │     ┃
  ┃     │                                                                           │     ┃
  ┃     │      <┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ - shift + ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄>      │     ┃
+
+
+
+Table context
+-------------
+
+Table-context is very similar to multi-context. Main differences are only some arguments with differents default values : ``pads`` is set to 1 and ``tip`` and ``sep`` are set to '|' (pipe).
+
+Scheme explaining effect of default arguments in *table context*::
+
+ tip               sep                tip
+  ┃ ┆             ┆ ┃ ┆              ┆ ┃
+  ┃1┆ content[0]  ┆1┃1┆ content[-1]  ┆1┃
+  ┃ ┆             ┆ ┃ ┆              ┆ ┃
+
 
 
 Alignments
@@ -76,11 +92,13 @@ Types of alignment::
    │elt1   elt3   elt2│  > spread (s)
 
 
-Formaters
-=========
+Methods
+=======
 
 Simple context
 --------------
+
+The content (single positional argment) can be of any type.
 
 :align:
     multi-purpose simple formater
@@ -101,7 +119,9 @@ Simple context
 Multiple context
 ----------------
 
-:muti_align:
+The content MUST be an iterable.
+
+:muti:
    multi-purpose formater in multiples zones
 
 :multi_center: 
@@ -113,23 +133,54 @@ Multiple context
 :multi_right:
     right alignment in multiples zones
 
-:right_left: 
-    fixed alingments - right and left - on two zones
+:multi_spread: 
+    spread alignments in mutliples zones
 
-:multi_right_left:
-    multiple context of right_left alignment
+
+Table context
+-------------
+
+Same as multi-context.
+
+:table:
+   multi-purpose formater in table
+
+:table_center: 
+    center alignment in table
+
+:table_left: 
+    left alignment in table
+
+:table_right:
+    right alignment in table
+
+:table_spread: 
+    spread alignments in table
+
+
+Extra formaters
+---------------
+
+Two positoinal arguments -- the contents -- are awaited.
+
+:dictionary:
+    double alignment for key/value : key is right justified, value is left justified. Separator is ':'
+
+:multi_dictionary: 
+    double alignments for multiple zones
+
+:table_dictionary: 
+    double alignments for table
+
 
 
 Positional arguments
 ====================
 
 :content:
-    | element or list of elements (int, float, string, ...)
+    | element or list of elements (two elements for special methods ``dictionary`` and derived).
+    | int, float, string, list, ...
     | the elements to format
-
-:length:
-    | positive integer
-    | total length of the returned string
 
 Key word arguments
 ==================
@@ -137,35 +188,44 @@ Key word arguments
 single forms
 ------------
 
+:length:
+    | positive integer
+    | total length of the returned string
+
+:just:
+    | single character
+    | flag for alignment types (see alignments section)
+    | default: "l" for ``align`` method
+
 :pad:
     | positive integer
     | left and right paddings
-    | paddings of the main-content-zone for multis
     | default: 0
 
 :l_pad:
     | positive integer
     | left padding (gets priority over ``pad``)
-    | left padding of the main-content-zone for multis
     | default: 0
 
 :r_pad:
     | positive integer 
     | right padding (gets priority over ``pad``)
-    | right padding of the main-content-zone for multis
     | default: 0
 
 :shift:
     | signed integer
     | shift of the content-zone (positive direction is rightward)
-    | shift of the main-content-zone for multis
     | default: 0
 
 :sep:
     | string
     | separator inserted between content elements
-    | separator inserted between content zones for multis
     | default: " "
+
+:tip:
+    | string
+    | element inserted at the tips of the formated contents
+    | default: ""
 
 
 plural forms
@@ -175,6 +235,11 @@ plural forms
     | positive integer or list of positive integers
     | lengths of each content zones
     | default: None (auto-computed)
+
+:justs:
+    | single character or list of single character
+    | flags for alignment types of each content zones
+    | default: "l" for ``multi_align`` and ``table`` methods
 
 :l_pads:
     | positive integer or list of positive integers
@@ -201,33 +266,40 @@ plural forms
     | separator inserted between content elements of each content zones
     | default: " "
 
+:tips:
+    | string
+    | element inserted at the tips of each content zones
+    | default: ""
+
+
 
 Examples
 ========
 
-    >>> center("content", 20)
+    >>> LF = LineFormater(length=20)
+    >>> center("content")
     '      content       '
 
-    >>> center("content", 20, shift=+5)
+    >>> LF.center("content", shift=+5)
     '           content  '
 
-    >>> left("content", 20, l_pad=2)
+    >>> LF.left("content", l_pad=2)
     '  content           '
 
-    >>> right("content", 20, r_pad=2)
+    >>> LF.right("content", r_pad=2)
     '           content  '
 
-    >>> spread(["foo", "bar", "foobar"], 20, pad=1)
+    >>> LF.spread(["foo", "bar", "foobar"], pad=1)
     ' foo   bar   foobar '
 
-    >>> multi_center(["elt1", "elt2", "elt3"], 30)
+    >>> LF.multi_center(["elt1", "elt2", "elt3"], length=30)
     '   elt1      elt2      elt3   '
 
-    >>> right_left("my_var", 1, 20, sep=": ")
+    >>> LF.dictionary("my_var", 1)
     '   my_var: 1        '
 
-    >>> multi_right_left(["var1", "var2"], [1, 2], 28, sep="|", seps=": ")
-    '  var1: 1    |  var2: 2     '
+    >>> LF.table_dictionary(["var1", "var2"], [1, 2], length=28)
+    '| var1: 1    |  var2: 2    |'
 
 
 

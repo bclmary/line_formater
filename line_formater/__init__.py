@@ -40,15 +40,5 @@ A collection of text line formaters.
 import line_formaters
 
 __all__ = [
-    "align",
-    "center",
-    "left",
-    "right",
-    "spread",
-    "multi_align",
-    "multi_center",
-    "multi_left",
-    "multi_right",
-    "right_left",
-    "multi_right_left",
+    "LineFormater",
     ]
