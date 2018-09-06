@@ -16,26 +16,40 @@ class LineFormater(object):
     kwargs
     ------
     NAME:   DESCRIPTION..................................(DEFAULT)
-    length: length of formated string....................(80)
-    just:   justification in ["l", "s", "r", "s"]........("l")
-    pad:    left and right padding, ie extra spaces......(0)
-    l_pad:  left padding.................................(None)
-    r_pad:  right padding................................(None)
-    shift:  shift of the content, rightward is positive..(0)
-    sep:    separator between elements...................(" ")
-    tip:    characters at left and right tips............("")
-    crop:   crop the ouput if it doesn't match length....(True)
+    length: posotive integer.............................(80)
+            length of formated string
+    just:   single character.............................("l")
+            justification in ["l", "s", "r", "s"]
+    pad:    positive integer.............................(0)
+            left and right padding, ie extra spaces
+    l_pad:  positive integer.............................(0)
+            left padding
+    r_pad:  positive integer.............................(0)
+            right padding
+    shift:  signed integer...............................(0)
+            shift of the content, rightward is positive
+    sep:    string.......................................(" ")
+            separator between elements
+    tip:    string.......................................("")
+            characters at left and right tips
+    crop:   boolean......................................(True)
+            True: crop the ouput that doesn't match
+                  the length
+            False: add non matching elements in a new
+                   line (if needed, troncatures are
+                   performed based on length only).
 
     kwargs for multi and table contexts
     -----------------------------------
-    lengths: lengths of columns...........(80)
-    justs:   justifications of columns ...("l")
-    pads:    padding of columns ..........(0)
-    l_pads:  left padding.of columns......(None)
-    r_pads:  right padding.of columns.....(None)
-    shifts:  shifts of columns............(0)
-    seps:    separator inside columns.....(" ")
-    tips:    tips of columns..............("")
+    lengths: lengths of columns...................(80)
+    justs:   justifications of columns ...........("l")
+    pads:    padding of columns ..................(0)
+    l_pads:  left padding.of columns..............(None)
+    r_pads:  right padding.of columns.............(None)
+    shifts:  shifts of columns....................(0)
+    seps:    separator inside columns.............(" ")
+    tips:    tips of columns......................("")
+    crops:   crop or keep non matching contents...(True)
 
     Separate values for each columns can be given using lists.
     """
@@ -60,6 +74,7 @@ class LineFormater(object):
         "shifts": 0,
         "seps": " ",
         "tips": "",
+        "crops": True,
     }
 
     def __init__(self, **kwargs):
@@ -103,10 +118,6 @@ class LineFormater(object):
         '    elt1****elt2    '
         >>> LF.align(["elt1", "elt2", "elt3"], just="c", tip="|", sep=":", pad=1)
         ' | elt1:elt2:elt3 | '
-        >>> LF.align(["longcontent", "verylongcontent"], just="s")
-        'gcontent verylongcon'
-        >>> LF.align(["longcontent", "verylongcontent"], just="s", crop=False)
-        'longcontent verylongcontent'
         >>> LF = LineFormater(length=12)
         >>> LF.align("very_long_content", just="l")
         'very_long_co'
@@ -114,6 +125,21 @@ class LineFormater(object):
         'long_content'
         >>> LF.align("very_long_content", just="c", shift=-3)
         'long_content'
+        >>> LF = LineFormater(length=20, crop=False)
+        >>> LF.align(["longcontent", "verylongcontent"], just="c")
+        '     longcontent    '
+        '   verylongcontent  '
+        >>> LF.align("longcontent verylongcontent", just="r")
+        '         longcontent'
+        '     verylongcontent'
+        >>> LF.align(
+                ["verylongcontent", "superrrrverylongcontent", "longcontent", "short"],
+                just="s"
+            )
+        'verylongcontent     '
+        'superrrrverylongcont'
+        'ent      longcontent'
+        '               short'
         """
         length = kwargs.get("length", self.length)
         just = kwargs.get("just", self.just)
@@ -247,6 +273,9 @@ class LineFormater(object):
         >>> LF.reset("pads", "sep")
         >>> LF.multi_align(["elt1", "elt2", "elt3"])
         'elt1      elt2      elt3      '
+        >>> LF.multi_align(["short", "long_content", "very long content"], crops=False)
+        'short     long_cont very long '
+        '          ent       content   '
         """
         N = len(elts)
         sep = kwargs.setdefault("sep", self.sep)
@@ -266,6 +295,7 @@ class LineFormater(object):
         kwargs["r_pads"] = pads if r_pads == None_N else r_pads
         self._setdefault_as_list(kwargs, "shifts", self.shifts, N)
         self._setdefault_as_list(kwargs, "seps", self.seps, N)
+        self._setdefault_as_list(kwargs, "crops", self.crops, N)
         _formater = kwargs.setdefault("_formater", self.align)
         formated_elts = []
         for i, elt in enumerate(elts):
