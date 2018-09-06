@@ -3,6 +3,7 @@
 
 import math
 
+
 class LineFormater(object):
 
     """
@@ -164,15 +165,20 @@ class LineFormater(object):
         if shift < 0:
             txt = txt[-shift:] + " " * -shift
         if len(txt) > length:
-            if crop :
+            if crop:
                 n = len(txt) - length
                 n1, n2 = n // 2, n // 2 + n % 2
                 left, right = (just == "l"), (just == "r")
                 txt = txt[:length] if left else (txt[n:] if right else txt[n1:-n2])
             else:
                 n_parts = len(txt) // length + 1
-                indexes = ((i*length, min(len(txt), (i+1)*length)) for i in range(n_parts))
-                return "\n".join([self.align(txt[i1:i2], **kwargs) for i1, i2 in indexes])
+                indexes = (
+                    (i * length, min(len(txt), (i + 1) * length))
+                    for i in range(n_parts)
+                )
+                return "\n".join(
+                    [self.align(txt[i1:i2], **kwargs) for i1, i2 in indexes]
+                )
         if tip:
             txt = tip + txt + tip
         if l_pad > 0:
