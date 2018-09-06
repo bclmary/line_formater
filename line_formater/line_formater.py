@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
+import math
 
 class LineFormater(object):
 
@@ -127,19 +128,12 @@ class LineFormater(object):
         'long_content'
         >>> LF = LineFormater(length=20, crop=False)
         >>> LF.align(["longcontent", "verylongcontent"], just="c")
-        '     longcontent    '
-        '   verylongcontent  '
+        'longcontent verylong\\n      content       '
         >>> LF.align("longcontent verylongcontent", just="r")
-        '         longcontent'
-        '     verylongcontent'
-        >>> LF.align(
-                ["verylongcontent", "superrrrverylongcontent", "longcontent", "short"],
-                just="s"
-            )
-        'verylongcontent     '
-        'superrrrverylongcont'
-        'ent      longcontent'
-        '               short'
+        'longcontent verylong\\n             content'
+        >>> elts = ["superverylongcontent", "verylongcontent", "longcontent", "short"]
+        >>> LF.align(elts, just="s")
+        'superverylongcontent\\n verylongcontent lon\\n  gcontent  short   '
         """
         length = kwargs.get("length", self.length)
         just = kwargs.get("just", self.just)
@@ -156,7 +150,7 @@ class LineFormater(object):
         elts = [str(elt) for elt in elts]
         length = length - l_pad - r_pad - len(tip) * 2
         space, retained = 1, False
-        if just == "s":
+        if just == "s" and len(elts) > 1:
             n_chars = sum([len(elt) for elt in elts])
             space = max(1, (length - n_chars) // (len(elts) - 1))
             retained = (length - n_chars) % (len(elts) - 1)
@@ -169,16 +163,16 @@ class LineFormater(object):
             txt = " " * shift + txt[:-shift]
         if shift < 0:
             txt = txt[-shift:] + " " * -shift
-        if crop and len(txt) > length:
-            n = len(txt) - length
-            if just == "l":
-                txt = txt[:length]
-            if just == "r":
-                txt = txt[n:]
-            if just in ("c", "s"):
-                n1 = n // 2
-                n2 = n // 2 + n % 2
-                txt = txt[n1:-n2]
+        if len(txt) > length:
+            if crop :
+                n = len(txt) - length
+                n1, n2 = n // 2, n // 2 + n % 2
+                left, right = (just == "l"), (just == "r")
+                txt = txt[:length] if left else (txt[n:] if right else txt[n1:-n2])
+            else:
+                n_parts = len(txt) // length + 1
+                indexes = ((i*length, min(len(txt), (i+1)*length)) for i in range(n_parts))
+                return "\n".join([self.align(txt[i1:i2], **kwargs) for i1, i2 in indexes])
         if tip:
             txt = tip + txt + tip
         if l_pad > 0:
@@ -273,9 +267,9 @@ class LineFormater(object):
         >>> LF.reset("pads", "sep")
         >>> LF.multi_align(["elt1", "elt2", "elt3"])
         'elt1      elt2      elt3      '
-        >>> LF.multi_align(["short", "long_content", "very long content"], crops=False)
-        'short     long_cont very long '
-        '          ent       content   '
+        >>> elts = ["short", "long content", "very very long content"]
+        >>> LF.multi_align(elts, crops=[False, True, False])
+        'short     long cont very very \\n                    long conte\\n                    nt        '
         """
         N = len(elts)
         sep = kwargs.setdefault("sep", self.sep)
@@ -295,7 +289,7 @@ class LineFormater(object):
         kwargs["r_pads"] = pads if r_pads == None_N else r_pads
         self._setdefault_as_list(kwargs, "shifts", self.shifts, N)
         self._setdefault_as_list(kwargs, "seps", self.seps, N)
-        self._setdefault_as_list(kwargs, "crops", self.crops, N)
+        crops = self._setdefault_as_list(kwargs, "crops", self.crops, N)
         _formater = kwargs.setdefault("_formater", self.align)
         formated_elts = []
         for i, elt in enumerate(elts):
@@ -303,6 +297,12 @@ class LineFormater(object):
                 key[:-1]: value[i] for (key, value) in kwargs.items() if key[-1] == "s"
             }
             formated_elts.append(_formater(elt, **i_kwargs))
+        if not all(crops):
+            n_chars = len(formated_elts[0])
+            n_lines = max([elt.count("\n") + 1 for elt in formated_elts])
+            elts = [elt.split("\n") for elt in formated_elts]
+            elts = [elt + [" " * n_chars] * (n_lines - len(elt)) for elt in elts]
+            return "\n".join(self.center(line, **kwargs) for line in zip(*elts))
         return self.center(formated_elts, **kwargs)
 
     multi = multi_align
