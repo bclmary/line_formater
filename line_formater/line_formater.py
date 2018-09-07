@@ -9,51 +9,61 @@ class LineFormater(object):
     """
     LineFormater() -> new line formater with default values
     LineFormater(**kwargs) -> new line formater initialized with the name=value
-    pairs in the keyword argument.  For example:  LineFormater(length=20)
+    pairs in the keyword argument. For example: LineFormater(length=20)
     
     LF = LineFormater()
     LF.align(<elt>) --> formated string
     <elts> can be a single object with __str__ method or an iterable.
     
-    kwargs
-    ------
-    NAME:   DESCRIPTION..................................(DEFAULT)
-    length: posotive integer.............................(80)
-            length of formated string
-    just:   single character.............................("l")
-            justification in ["l", "s", "r", "s"]
-    pad:    positive integer.............................(0)
-            left and right padding, ie extra spaces
-    l_pad:  positive integer.............................(0)
-            left padding
-    r_pad:  positive integer.............................(0)
-            right padding
-    shift:  signed integer...............................(0)
-            shift of the content, rightward is positive
-    sep:    string.......................................(" ")
-            separator between elements
-    tip:    string.......................................("")
-            characters at left and right tips
-    crop:   boolean......................................(True)
-            True: crop the ouput that doesn't match
-                  the length
-            False: add non matching elements in a new
-                   line (if needed, troncatures are
-                   performed based on length only).
+    Key word arguments (kwargs)
+    ---------------------------
+    NAME:    DESCRIPTION....................................(DEFAULT)
+    length:  Positive integer...............................(80)
+             Length of formated string.
+    just:    Single character...............................("l")
+             Justification type among:
+               "l": left
+               "c": center
+               "r": right
+               "s": spread (similar to justify)
+    pad:     Positive integer...............................(0)
+             Left and right paddings (ie extra spaces).
+             Paddings reduce the content to keep length.
+    l_pad:   Positive integer...............................(0)
+             Left padding (ie extra spaces on left tip).
+    r_pad:   Positive integer...............................(0)
+             Right padding (ie extra spaces on right tip).
+    shift:   Signed integer.................................(0)
+             Shift of the content, rightward is positive.
+    sep:     String.........................................(" ")
+             Separator between elements if an iterator is
+             given as input.
+    tip:     String.........................................("")
+             Characters at left and right tips.
+             These reduce the content to keep length.
+    crop:    Boolean........................................(True)
+               True:  crop the content that doesn't match
+                      the length
+               False: non length matching content is
+                      displayed on several lines
 
-    kwargs for multi and table contexts
+    Multi and table contexts display iterable's content in columns
+    with total width matching length.
+
+    Kwargs for multi and table contexts
     -----------------------------------
-    lengths: lengths of columns...................(80)
-    justs:   justifications of columns ...........("l")
-    pads:    padding of columns ..................(0)
-    l_pads:  left padding.of columns..............(None)
-    r_pads:  right padding.of columns.............(None)
-    shifts:  shifts of columns....................(0)
-    seps:    separator inside columns.............(" ")
-    tips:    tips of columns......................("")
-    crops:   crop or keep non matching contents...(True)
+    lengths: Lengths of columns.............................(80)
+    justs:   Justifications of columns .....................("l")
+    pads:    Padding of columns ............................(0)
+    l_pads:  Left padding.of columns........................(None)
+    r_pads:  Right padding.of columns.......................(None)
+    shifts:  Shifts of columns..............................(0)
+    seps:    Separator inside columns.......................(" ")
+    tips:    Tips of columns................................("")
+    crops:   Crop or keep non matching contents.............(True)
 
     Separate values for each columns can be given using lists.
+    None value can be used to keep default of a specific column.
     """
 
     _align_parser = {"l": "ljust", "r": "rjust", "c": "center", "s": "center"}
@@ -273,9 +283,11 @@ class LineFormater(object):
         >>> LF.reset("pads", "sep")
         >>> LF.multi_align(["elt1", "elt2", "elt3"])
         'elt1      elt2      elt3      '
-        >>> elts = ["short", "long content", "very very long content"]
+        >>> elts = ["short", "long_content", "very_very_long_content"]
         >>> LF.multi_align(elts, crops=[False, True, False])
-        'short     long cont very very \\n                    long conte\\n                    nt        '
+        'short     long_cont very_very_\\n                    long_conte\\n                    nt        '
+        >>> LF.multi_align(elts, lengths=[5, 12])
+        'short long_content very_very_ '
         """
         N = len(elts)
         sep = kwargs.setdefault("sep", self.sep)
@@ -309,7 +321,7 @@ class LineFormater(object):
             elts = [elt.split("\n") for elt in formated_elts]
             elts = [elt + [" " * n_chars] * (n_lines - len(elt)) for elt in elts]
             return "\n".join(self.center(line, **kwargs) for line in zip(*elts))
-        return self.center(formated_elts, **kwargs)
+        return self.align(formated_elts, **kwargs)
 
     multi = multi_align
 
