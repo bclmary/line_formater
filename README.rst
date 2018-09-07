@@ -41,7 +41,7 @@ Example::
 
 
 
-Multiple context
+Multi context
 ----------------
 
 In multi context, each element of given contents are formated in as many content zones.
@@ -92,9 +92,9 @@ Types of alignment::
 
    │<┄┄content-zone┄┄>│
    │                  │
-   │    elt1 elt2     │  > center (c)
-   │                  │
    │elt1 elt2         │  > left (l)
+   │                  │
+   │    elt1 elt2     │  > center (c)
    │                  │
    │         elt1 elt2│  > right (r)
    │                  │
@@ -125,7 +125,7 @@ The content (single positional argment) can be of any type.
     spread alignment
 
 
-Multiple context
+Multi context
 ----------------
 
 The content MUST be an iterable.
@@ -187,99 +187,123 @@ Positional arguments
 ====================
 
 :content:
-    | element or list of elements (two elements for special methods ``dictionary`` and derived).
-    | int, float, string, list, ...
-    | the elements to format
+    | A single object with __str__ method or an iterable (two elements for special methods ``dictionary`` and derived).
+    | The elements to format.
+
 
 Key word arguments
 ==================
 
-single forms
+Single forms
 ------------
 
-:length:
-    | positive integer
-    | total length of the returned string
+:length:  
+    | Positive integer.
+    | Length of formated string.
+    | Default is 80.
 
 :just:
-    | single character
-    | flag for alignment types (see alignments section)
-    | default: "l" for ``align`` method
+    | Single character.
+    | Justification type among:
+    |   "l": left
+    |   "c": center
+    |   "r": right
+    |   "s": spread (similar to justify)
+    | Default is "l".
 
 :pad:
-    | positive integer
-    | left and right paddings
-    | default: 0
+    | Positive integer.
+    | Left and right paddings (ie extra spaces).
+    | Paddings reduce the content to keep length.
+    | Default is "l".
 
 :l_pad:
-    | positive integer
-    | left padding (gets priority over ``pad``)
-    | default: 0
+    | Positive integer.
+    | Left padding (ie extra spaces on left tip).
+    | Default is 0.
 
 :r_pad:
-    | positive integer 
-    | right padding (gets priority over ``pad``)
-    | default: 0
+    | Positive integer.
+    | Right padding (ie extra spaces on right tip).
+    | Default is 0.
 
 :shift:
-    | signed integer
-    | shift of the content-zone (positive direction is rightward)
-    | default: 0
+    | Signed integer.
+    | Shift of the content, rightward is positive.
+    | Default is 0.
 
 :sep:
-    | string
-    | separator inserted between content elements
-    | default: " "
+    | String.
+    | Separator between elements if an iterator is given as input.
+    | Default is " ".
 
 :tip:
-    | string
-    | element inserted at the tips of the formated contents
-    | default: ""
+    | String.
+    | Characters at left and right tips.
+    | These reduce the content to keep length.
+    | Default is "".
+
+:crop:
+    | Boolean.
+    |   True:  crop the content that doesn't match the length.
+    |   False: non length matching content is displayed on several lines.
+    | Default is True.
 
 
-plural forms
+
+Plural forms
 ------------
 
 :lengths:
-    | positive integer or list of positive integers
-    | lengths of each content zones
-    | default: None (auto-computed)
+    | Positive integer or list of positive integers.
+    | Lengths of each content zones.
+    | Default: None (auto-computed).
 
 :justs:
-    | single character or list of single character
-    | flags for alignment types of each content zones
-    | default: "l" for ``multi_align`` and ``table`` methods
+    | Single character or list of single character.
+    | Flags for alignment types of each content zones.
+    | Default: "l" for ``multi_align`` and ``table`` methods.
 
 :l_pads:
-    | positive integer or list of positive integers
-    | left and right padding of each content zones
-    | default: 0
+    | Positive integer or list of positive integers.
+    | Left and right padding of each content zones.
+    | Paddings reduce the contents to keep lengths.
+    | Default: 0.
 
 :l_pads:
-    | positive integer or list of positive integers
-    | left padding of each content zones
-    | default: 0
+    | Positive integer or list of positive integers.
+    | Left padding of each content zones.
+    | Default: 0.
 
 :r_pads:
-    | positive integer or list of positive integers
-    | right padding of each content zones
-    | default: 0
+    | Positive integer or list of positive integers.
+    | Right padding of each content zones.
+    | Default: 0.
 
 :shifts:
-    | signed integer or list of signed integers
-    | shift of each content zones
-    | default: 0
+    | Signed integer or list of signed integers.
+    | Shift of each content zones.
+    | Default: 0.
 
 :seps:
-    | string
-    | separator inserted between content elements of each content zones
-    | default: " "
+    | String or list of Strings.
+    | Separator inserted between content elements of each content zones (if contents are iterables).
+    | Default: " ".
 
 :tips:
-    | string
-    | element inserted at the tips of each content zones
-    | default: ""
+    | String or list of Strings.
+    | Characters inserted at the tips of each content zones.
+    | These reduce the content to keep length.
+    | Default: "".
 
+:crops:
+    | Boolean or list of Booleans.
+    |   True:  crop the contents that doesn't match the lengths.
+    |   False: non length matching contents are displayed on several lines.
+    | Default is True.
+
+
+If list are used with plural forms, ``None`` value can be used to keep default of a specific column.
 
 
 Examples
