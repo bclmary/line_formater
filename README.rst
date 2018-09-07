@@ -37,7 +37,7 @@ Example::
   length = 18
   pad = 2
   sep = "*"
-  output =   "  elt1*elt2*elt3  "
+  output = "  elt1*elt2*elt3  "
 
 
 
